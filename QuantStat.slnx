@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuantStat.Api/QuantStat.Api.csproj" />
+    <Project Path="src/QuantStat.Core/QuantStat.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/QuantStat.Tests/QuantStat.Tests.csproj" />
+  </Folder>
+</Solution>
