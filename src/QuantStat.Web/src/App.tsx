@@ -1,3 +1,6 @@
+import DictionaryPage from './features/dictionary/DictionaryPage'
+import MarketsPage from './features/markets/MarketsPage'
+
 import ChartsPage from './features/charts/ChartsPage'
 import './styles/app.css'
 
@@ -50,10 +53,7 @@ function App() {
         <Route
           path="/markets"
           element={
-            <PlaceholderPage
-              title="Markets"
-              description="Market discovery and instrument analysis"
-            />
+            <MarketsPage />
           }
         />
 
@@ -88,10 +88,7 @@ function App() {
         <Route
           path="/dictionary"
           element={
-            <PlaceholderPage
-              title="Dictionary"
-              description="Statistical reference and calculators"
-            />
+            <DictionaryPage />
           }
         />
 

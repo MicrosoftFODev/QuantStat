@@ -1,3 +1,5 @@
+import ReturnDistributionChart from './ReturnDistributionChart'
+
 import {
   Activity,
   BarChart3,
@@ -659,6 +661,8 @@ function StatisticsPage() {
             </article>
 
           </section>
+
+          <ReturnDistributionChart />
 
         </>
       )}

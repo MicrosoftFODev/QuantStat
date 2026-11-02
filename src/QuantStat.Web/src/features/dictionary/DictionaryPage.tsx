@@ -1,0 +1,451 @@
+import { exportDictionaryPdf } from './dictionaryPdf'
+import {
+  Bookmark,
+  BookmarkCheck,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  X,
+  Download,
+} from 'lucide-react'
+
+import {
+  useMemo,
+  useState,
+} from 'react'
+
+import DictionaryCalculators from './DictionaryCalculators'
+
+import {
+  categoryOrder,
+  dictionaryEntries,
+} from './dictionaryData'
+
+import type {
+  DictionaryCategory,
+} from './dictionaryData'
+
+const BOOKMARK_KEY =
+  'quantstat-dictionary-bookmarks'
+
+function loadBookmarks(): string[] {
+  try {
+    const value =
+      localStorage.getItem(BOOKMARK_KEY)
+
+    return value
+      ? JSON.parse(value) as string[]
+      : []
+  } catch {
+    return []
+  }
+}
+
+function DictionaryPage() {
+  const [search, setSearch] =
+    useState('')
+
+  const [category, setCategory] =
+    useState<DictionaryCategory | 'All'>(
+      'All',
+    )
+
+  const [expanded, setExpanded] =
+    useState<string[]>([])
+
+  const [bookmarks, setBookmarks] =
+    useState<string[]>(loadBookmarks)
+
+  const [bookmarksOnly, setBookmarksOnly] =
+    useState(false)
+
+  const filteredEntries =
+    useMemo(() => {
+      const query =
+        search.trim().toLowerCase()
+
+      return dictionaryEntries.filter(entry => {
+        const categoryMatch =
+          category === 'All' ||
+          entry.category === category
+
+        const bookmarkMatch =
+          !bookmarksOnly ||
+          bookmarks.includes(entry.id)
+
+        const searchText = [
+          entry.title,
+          entry.category,
+          entry.summary,
+          entry.formula ?? '',
+          entry.interpretation,
+          ...(entry.tags ?? []),
+          ...(entry.related ?? []),
+        ]
+          .join(' ')
+          .toLowerCase()
+
+        return (
+          categoryMatch &&
+          bookmarkMatch &&
+          (
+            query.length === 0 ||
+            searchText.includes(query)
+          )
+        )
+      })
+    }, [
+      search,
+      category,
+      bookmarks,
+      bookmarksOnly,
+    ])
+
+  const grouped =
+    useMemo(
+      () =>
+        categoryOrder
+          .map(group => ({
+            category: group,
+            entries:
+              filteredEntries.filter(
+                item =>
+                  item.category === group,
+              ),
+          }))
+          .filter(
+            group =>
+              group.entries.length > 0,
+          ),
+      [filteredEntries],
+    )
+
+  function toggleExpanded(id: string): void {
+    setExpanded(current =>
+      current.includes(id)
+        ? current.filter(item => item !== id)
+        : [...current, id],
+    )
+  }
+
+  function toggleBookmark(id: string): void {
+    setBookmarks(current => {
+      const next =
+        current.includes(id)
+          ? current.filter(item => item !== id)
+          : [...current, id]
+
+      localStorage.setItem(
+        BOOKMARK_KEY,
+        JSON.stringify(next),
+      )
+
+      return next
+    })
+  }
+
+  function clearFilters(): void {
+    setSearch('')
+    setCategory('All')
+    setBookmarksOnly(false)
+  }
+
+  return (
+    <>
+      <section className="page-heading dictionary-heading">
+        <div>
+          <h1>Dictionary</h1>
+          <p>
+            Interactive statistical reference,
+            formulas, assumptions, and interpretation
+          </p>
+        </div>
+
+        <div className="dictionary-heading-actions">
+
+          <button
+            type="button"
+            className="dictionary-export-button"
+            onClick={() =>
+              exportDictionaryPdf(
+                filteredEntries,
+                category === 'All'
+                  ? 'Complete QuantStat statistical reference'
+                  : `QuantStat statistical reference: ${category}`,
+              )
+            }
+          >
+            <Download size={16} />
+            Export PDF
+          </button>
+
+          <div className="dictionary-count">
+          <strong>{dictionaryEntries.length}</strong>
+          <span>topics</span>
+        </div>
+
+        </div>
+      </section>
+
+      <section className="dictionary-toolbar">
+        <label className="dictionary-search">
+          <Search size={18} />
+
+          <input
+            type="search"
+            value={search}
+            placeholder="Search concepts, formulas, tests..."
+            onChange={event =>
+              setSearch(event.target.value)
+            }
+          />
+
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              title="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </label>
+
+        <button
+          type="button"
+          className={
+            bookmarksOnly
+              ? 'dictionary-bookmarks active'
+              : 'dictionary-bookmarks'
+          }
+          onClick={() =>
+            setBookmarksOnly(value => !value)
+          }
+        >
+          <Bookmark size={16} />
+          Bookmarks
+          <span>{bookmarks.length}</span>
+        </button>
+      </section>
+
+      <section className="dictionary-category-bar">
+        <button
+          type="button"
+          className={
+            category === 'All'
+              ? 'active'
+              : undefined
+          }
+          onClick={() => setCategory('All')}
+        >
+          All
+        </button>
+
+        {categoryOrder.map(item => (
+          <button
+            type="button"
+            key={item}
+            className={
+              category === item
+                ? 'active'
+                : undefined
+            }
+            onClick={() => setCategory(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </section>
+
+      <section className="dictionary-overview">
+        <div>
+          <BookOpen size={21} />
+          <span>
+            Showing
+            <strong> {filteredEntries.length} </strong>
+            matching topics
+          </span>
+        </div>
+
+        {(search ||
+          category !== 'All' ||
+          bookmarksOnly) && (
+          <button
+            type="button"
+            onClick={clearFilters}
+          >
+            Clear filters
+          </button>
+        )}
+      </section>
+
+      {grouped.length === 0 ? (
+        <section className="dictionary-empty">
+          <Search size={28} />
+          <h2>No matching topics</h2>
+          <p>
+            Try another search term or clear
+            the current filters.
+          </p>
+        </section>
+      ) : (
+        <section className="dictionary-content">
+          {grouped.map(group => (
+            <section
+              className="dictionary-group"
+              key={group.category}
+            >
+              <div className="dictionary-group-heading">
+                <div>
+                  <span>Chapter</span>
+                  <h2>{group.category}</h2>
+                </div>
+
+                <strong>
+                  {group.entries.length}
+                </strong>
+              </div>
+
+              <div className="dictionary-entry-grid">
+                {group.entries.map(entry => {
+                  const isExpanded =
+                    expanded.includes(entry.id)
+
+                  const isBookmarked =
+                    bookmarks.includes(entry.id)
+
+                  return (
+                    <article
+                      className={
+                        isExpanded
+                          ? 'dictionary-entry expanded'
+                          : 'dictionary-entry'
+                      }
+                      key={entry.id}
+                    >
+                      <header>
+                        <div>
+                          <span>
+                            {entry.category}
+                          </span>
+                          <h3>{entry.title}</h3>
+                        </div>
+
+                        <button
+                          type="button"
+                          className={
+                            isBookmarked
+                              ? 'entry-bookmark active'
+                              : 'entry-bookmark'
+                          }
+                          title={
+                            isBookmarked
+                              ? 'Remove bookmark'
+                              : 'Add bookmark'
+                          }
+                          onClick={() =>
+                            toggleBookmark(entry.id)
+                          }
+                        >
+                          {isBookmarked
+                            ? <BookmarkCheck size={17} />
+                            : <Bookmark size={17} />}
+                        </button>
+                      </header>
+
+                      <p className="entry-summary">
+                        {entry.summary}
+                      </p>
+
+                      {entry.formula && (
+                        <div className="formula-box">
+                          {entry.formula}
+                        </div>
+                      )}
+
+                      <div className="entry-tags">
+                        {entry.tags.slice(0, 4).map(tag => (
+                          <span key={tag}>{tag}</span>
+                        ))}
+                      </div>
+
+                      {isExpanded && (
+                        <div className="entry-details">
+                          <div>
+                            <h4>Interpretation</h4>
+                            <p>{entry.interpretation ?? entry.summary}</p>
+                          </div>
+
+                          {entry.variables &&
+                            entry.variables.length > 0 && (
+                            <div>
+                              <h4>Variables</h4>
+                              <ul>
+                                {entry.variables.map(item => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {entry.assumptions &&
+                            entry.assumptions.length > 0 && (
+                            <div>
+                              <h4>Assumptions</h4>
+                              <ul>
+                                {entry.assumptions.map(item => (
+                                  <li key={item}>{item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {entry.related &&
+                            entry.related.length > 0 && (
+                            <div>
+                              <h4>Related topics</h4>
+                              <div className="related-topics">
+                                {entry.related.map(item => (
+                                  <span key={item}>{item}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        className="entry-expand"
+                        onClick={() =>
+                          toggleExpanded(entry.id)
+                        }
+                      >
+                        {isExpanded ? (
+                          <>
+                            Less detail
+                            <ChevronUp size={16} />
+                          </>
+                        ) : (
+                          <>
+                            More detail
+                            <ChevronDown size={16} />
+                          </>
+                        )}
+                      </button>
+                    </article>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </section>
+      )}
+
+      <DictionaryCalculators />
+    </>
+  )
+}
+
+export default DictionaryPage
