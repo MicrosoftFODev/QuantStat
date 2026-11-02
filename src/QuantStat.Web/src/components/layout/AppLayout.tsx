@@ -1,4 +1,4 @@
-﻿import {
+import {
   Activity,
   BarChart3,
   BookOpen,
@@ -6,6 +6,7 @@
   Database,
   FlaskConical,
   Gauge,
+  LogOut,
   Moon,
   Settings,
   Sun,
@@ -18,83 +19,100 @@ import {
 } from 'react-router-dom'
 
 import {
-  useEffect,
-  useState,
-} from 'react'
+  useAccount,
+  useMsal,
+} from '@azure/msal-react'
 
-
-type Theme =
-  'dark' |
-  'light'
+import {
+  usePreferences,
+} from '../../preferences/PreferencesContext'
 
 
 const navigation = [
   {
-    label: 'Dashboard',
+    label: 'dashboard',
     path: '/dashboard',
     icon: Gauge,
   },
   {
-    label: 'Markets',
+    label: 'markets',
     path: '/markets',
     icon: BarChart3,
   },
   {
-    label: 'Charts',
+    label: 'charts',
     path: '/charts',
     icon: ChartNoAxesCombined,
   },
   {
-    label: 'Statistics',
+    label: 'statistics',
     path: '/statistics',
     icon: FlaskConical,
   },
   {
-    label: 'Import',
+    label: 'import',
     path: '/import',
     icon: Upload,
   },
   {
-    label: 'Dictionary',
+    label: 'dictionary',
     path: '/dictionary',
     icon: BookOpen,
   },
   {
-    label: 'Forecast',
+    label: 'forecast',
     path: '/forecast',
     icon: Activity,
   },
   {
-    label: 'Settings',
+    label: 'settings',
     path: '/settings',
     icon: Settings,
   },
-]
+] as const
 
 
 function AppLayout() {
-  const [theme, setTheme] =
-    useState<Theme>(() => {
-      const saved =
-        localStorage.getItem(
-          'quantstat-theme',
-        )
+  const {
+    instance,
+    accounts,
+  } =
+    useMsal()
 
-      return saved === 'light'
-        ? 'light'
-        : 'dark'
-    })
-
-
-  useEffect(() => {
-    document.documentElement.dataset.theme =
-      theme
-
-    localStorage.setItem(
-      'quantstat-theme',
-      theme,
+  const account =
+    useAccount(
+      accounts[0] ?? null,
     )
-  }, [theme])
+
+  const {
+    preferences,
+    effectiveTheme,
+    setTheme,
+    translate,
+  } =
+    usePreferences()
+
+
+  const toggleTheme =
+    (): void => {
+      setTheme(
+        effectiveTheme === 'dark'
+          ? 'light'
+          : 'dark',
+      )
+    }
+
+
+  const signOut =
+    async (): Promise<void> => {
+      await instance.logoutRedirect({
+        account:
+          account ?? undefined,
+
+        postLogoutRedirectUri:
+          window.location.origin,
+      })
+    }
 
 
   return (
@@ -109,13 +127,17 @@ function AppLayout() {
           </div>
 
           <div>
+
             <strong>
               QuantStat
             </strong>
 
             <span>
-              Market analytics
+              {translate(
+                'marketAnalytics',
+              )}
             </span>
+
           </div>
 
         </div>
@@ -129,7 +151,6 @@ function AppLayout() {
               path,
               icon: Icon,
             }) => (
-
               <NavLink
                 key={path}
                 to={path}
@@ -143,14 +164,44 @@ function AppLayout() {
                 <Icon size={18} />
 
                 <span>
-                  {label}
+                  {translate(
+                    label,
+                  )}
                 </span>
               </NavLink>
-
             ),
           )}
 
         </nav>
+
+
+        <div className="sidebar-account">
+
+          <div className="sidebar-account-avatar">
+            {(
+              account?.name ??
+              account?.username ??
+              'M'
+            )
+              .slice(
+                0,
+                1,
+              )
+              .toUpperCase()}
+          </div>
+
+          <div>
+            <strong>
+              {account?.name ??
+                'Microsoft account'}
+            </strong>
+
+            <span>
+              {account?.username}
+            </span>
+          </div>
+
+        </div>
 
 
         <div className="sidebar-footer">
@@ -160,7 +211,9 @@ function AppLayout() {
           </span>
 
           <small>
-            Development build
+            {translate(
+              'developmentBuild',
+            )}
           </small>
 
         </div>
@@ -173,29 +226,53 @@ function AppLayout() {
         <div className="app-toolbar">
 
           <div className="app-toolbar-status">
+
             <span className="status-dot" />
 
-            QuantStat API
+            {translate(
+              'apiStatus',
+            )}
+
           </div>
 
 
-          <button
-            className="theme-button"
-            type="button"
-            title="Toggle theme"
-            onClick={() =>
-              setTheme(
-                current =>
-                  current === 'dark'
-                    ? 'light'
-                    : 'dark',
-              )
-            }
-          >
-            {theme === 'dark'
-              ? <Sun size={18} />
-              : <Moon size={18} />}
-          </button>
+          <div className="toolbar-actions">
+
+            <span className="toolbar-preference">
+              {preferences.language.toUpperCase()}
+            </span>
+
+            <span className="toolbar-preference">
+              {preferences.currency}
+            </span>
+
+            <button
+              className="theme-button"
+              type="button"
+              title="Toggle theme"
+              onClick={
+                toggleTheme
+              }
+            >
+              {effectiveTheme === 'dark'
+                ? <Sun size={18} />
+                : <Moon size={18} />}
+            </button>
+
+            <button
+              className="theme-button logout-button"
+              type="button"
+              title={translate(
+                'signOut',
+              )}
+              onClick={() =>
+                void signOut()
+              }
+            >
+              <LogOut size={18} />
+            </button>
+
+          </div>
 
         </div>
 

@@ -1,3 +1,4 @@
+import { usePreferences } from '../../preferences/PreferencesContext'
 import {
   CartesianGrid,
   ComposedChart,
@@ -50,6 +51,10 @@ function shortDate(
 
 
 function DashboardPage() {
+  const {
+    preferences,
+  } =
+    usePreferences()
   const [metadata, setMetadata] =
     useState<MarketMetadata | null>(
       null,
@@ -161,7 +166,10 @@ function DashboardPage() {
 
     return () =>
       controller.abort()
-  }, [])
+  }, [
+    preferences.currency,
+    symbol,
+  ])
 
 
   useEffect(() => {
@@ -283,7 +291,13 @@ function DashboardPage() {
             }
           >
 
-            {metadata?.markets.map(
+            {metadata?.markets
+              .filter(
+                market =>
+                  market.quoteAsset ===
+                  preferences.currency,
+              )
+              .map(
               market => (
                 <option
                   key={market.symbol}
@@ -622,7 +636,7 @@ function DashboardPage() {
                     ?.wilderRsi
                     ?.toFixed(2)
                   ??
-                  '—'
+                  'â€”'
                 }
               </div>
 

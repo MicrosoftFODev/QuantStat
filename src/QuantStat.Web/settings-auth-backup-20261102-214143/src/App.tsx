@@ -1,0 +1,144 @@
+import DictionaryPage from './features/dictionary/DictionaryPage'
+import MarketsPage from './features/markets/MarketsPage'
+
+import ChartsPage from './features/charts/ChartsPage'
+import './styles/app.css'
+
+import {
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom'
+
+import AppLayout
+  from './components/layout/AppLayout'
+
+import DashboardPage
+  from './features/dashboard/DashboardPage'
+
+import StatisticsPage
+  from './features/statistics/StatisticsPage'
+
+import PlaceholderPage
+  from './pages/PlaceholderPage'
+
+
+function App() {
+  return (
+    <Routes>
+
+      <Route
+        element={<AppLayout />}
+      >
+
+        <Route
+          index
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
+
+        <Route
+          path="/dashboard"
+          element={
+            <DashboardPage />
+          }
+        />
+
+
+        <Route
+          path="/markets"
+          element={
+            <MarketsPage />
+          }
+        />
+
+
+        <Route
+          path="/charts"
+          element={
+            <ChartsPage />
+          }
+        />
+
+
+        <Route
+          path="/statistics"
+          element={
+            <StatisticsPage />
+          }
+        />
+
+
+        <Route
+          path="/import"
+          element={
+            <PlaceholderPage
+              title="Import"
+              description="Analyze Excel and CSV datasets"
+            />
+          }
+        />
+
+
+        <Route
+          path="/dictionary"
+          element={
+            <DictionaryPage />
+          }
+        />
+
+
+        <Route
+          path="/forecast"
+          element={
+            <PlaceholderPage
+              title="Forecast"
+              description="Forecasting models and diagnostics"
+            />
+          }
+        />
+
+
+        <Route
+          path="/settings"
+          element={
+            <PlaceholderPage
+              title="Settings"
+              description="QuantStat preferences and account"
+            />
+          }
+        />
+
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
+      </Route>
+
+    </Routes>
+  )
+}
+
+
+/*
+ * Temporary wrapper.
+ *
+ * The next refactor will move market
+ * selection into shared application
+ * state so Dashboard, Statistics,
+ * Charts and Forecast all use the same
+ * selected market.
+ */
+export default App

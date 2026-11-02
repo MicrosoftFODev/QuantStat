@@ -1,3 +1,4 @@
+import SettingsPage from './features/settings/SettingsPage'
 import DictionaryPage from './features/dictionary/DictionaryPage'
 import MarketsPage from './features/markets/MarketsPage'
 
@@ -107,10 +108,7 @@ function App() {
         <Route
           path="/settings"
           element={
-            <PlaceholderPage
-              title="Settings"
-              description="QuantStat preferences and account"
-            />
+            <SettingsPage />
           }
         />
 

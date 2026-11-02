@@ -1,623 +1,1 @@
-import {
-  ArrowDownAZ,
-  ArrowUpAZ,
-  CheckCircle2,
-  Database,
-  RefreshCw,
-  Search,
-} from 'lucide-react'
-
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-
-import {
-  Link,
-} from 'react-router-dom'
-
-import {
-  getMarkets,
-} from '../../api/quantStatApi'
-
-import type {
-  MarketInstrument,
-  MarketMetadata,
-} from '../../models/market'
-
-
-type SortDirection =
-  'ascending' |
-  'descending'
-
-
-function MarketsPage() {
-  const [metadata, setMetadata] =
-    useState<MarketMetadata | null>(
-      null,
-    )
-
-  const [search, setSearch] =
-    useState('')
-
-  const [quoteCurrency, setQuoteCurrency] =
-    useState('ALL')
-
-  const [sortDirection, setSortDirection] =
-    useState<SortDirection>(
-      'ascending',
-    )
-
-  const [loading, setLoading] =
-    useState(true)
-
-  const [refreshKey, setRefreshKey] =
-    useState(0)
-
-  const [error, setError] =
-    useState<string | null>(
-      null,
-    )
-
-
-  const selectedSymbol =
-    localStorage.getItem(
-      'quantstat-symbol',
-    ) ?? 'ETHUSD'
-
-
-  useEffect(() => {
-    const controller =
-      new AbortController()
-
-    setLoading(true)
-    setError(null)
-
-    getMarkets(
-      controller.signal,
-    )
-      .then(setMetadata)
-      .catch((reason: unknown) => {
-        if (
-          reason instanceof DOMException &&
-          reason.name === 'AbortError'
-        ) {
-          return
-        }
-
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : 'Markets could not be loaded.',
-        )
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
-      })
-
-    return () =>
-      controller.abort()
-  }, [refreshKey])
-
-
-  const filteredMarkets =
-    useMemo(() => {
-      const normalizedSearch =
-        search
-          .trim()
-          .toUpperCase()
-
-      const markets =
-        metadata?.markets ?? []
-
-      const filtered =
-        markets.filter(
-          market => {
-            const matchesQuote =
-              quoteCurrency === 'ALL'
-              ||
-              market.quoteAsset ===
-                quoteCurrency
-
-            const matchesSearch =
-              normalizedSearch.length === 0
-              ||
-              market.symbol
-                .toUpperCase()
-                .includes(
-                  normalizedSearch,
-                )
-              ||
-              market.displayName
-                .toUpperCase()
-                .includes(
-                  normalizedSearch,
-                )
-              ||
-              market.baseAsset
-                .toUpperCase()
-                .includes(
-                  normalizedSearch,
-                )
-              ||
-              market.quoteAsset
-                .toUpperCase()
-                .includes(
-                  normalizedSearch,
-                )
-
-            return (
-              matchesQuote &&
-              matchesSearch
-            )
-          },
-        )
-
-      return [...filtered].sort(
-        (left, right) => {
-          const comparison =
-            left.displayName.localeCompare(
-              right.displayName,
-            )
-
-          return sortDirection ===
-            'ascending'
-            ? comparison
-            : -comparison
-        },
-      )
-    }, [
-      metadata,
-      search,
-      quoteCurrency,
-      sortDirection,
-    ])
-
-
-  const uniqueBaseAssets =
-    useMemo(
-      () =>
-        new Set(
-          metadata?.markets.map(
-            market =>
-              market.baseAsset,
-          ) ?? [],
-        ).size,
-      [metadata],
-    )
-
-
-  const activeMarket =
-    metadata?.markets.find(
-      market =>
-        market.symbol ===
-        selectedSymbol,
-    )
-
-
-  function toggleSort(): void {
-    setSortDirection(
-      current =>
-        current === 'ascending'
-          ? 'descending'
-          : 'ascending',
-    )
-  }
-
-
-  function marketIsActive(
-    market: MarketInstrument,
-  ): boolean {
-    return (
-      market.symbol ===
-      selectedSymbol
-    )
-  }
-
-
-  return (
-    <>
-      <section className="page-heading markets-heading">
-
-        <div>
-          <h1>
-            Markets
-          </h1>
-
-          <p>
-            Discover available market pairs
-            and quote currencies
-          </p>
-        </div>
-
-
-        <button
-          className="market-refresh-button"
-          type="button"
-          disabled={loading}
-          onClick={() =>
-            setRefreshKey(
-              current =>
-                current + 1,
-            )
-          }
-        >
-          <RefreshCw
-            size={16}
-            className={
-              loading
-                ? 'spinning'
-                : undefined
-            }
-          />
-
-          Refresh
-        </button>
-
-      </section>
-
-
-      <section className="market-summary-grid">
-
-        <article className="market-summary-card">
-          <span>
-            Tradable pairs
-          </span>
-
-          <strong>
-            {metadata?.markets.length ?? '—'}
-          </strong>
-
-          <small>
-            Available from the provider
-          </small>
-        </article>
-
-
-        <article className="market-summary-card">
-          <span>
-            Base assets
-          </span>
-
-          <strong>
-            {metadata
-              ? uniqueBaseAssets
-              : '—'}
-          </strong>
-
-          <small>
-            Distinct analyzed assets
-          </small>
-        </article>
-
-
-        <article className="market-summary-card">
-          <span>
-            Quote currencies
-          </span>
-
-          <strong>
-            {
-              metadata
-                ?.quoteCurrencies
-                .length
-              ??
-              '—'
-            }
-          </strong>
-
-          <small>
-            Available quote markets
-          </small>
-        </article>
-
-
-        <article className="market-summary-card active-market-card">
-          <span>
-            Dashboard market
-          </span>
-
-          <strong>
-            {
-              activeMarket
-                ?.displayName
-              ??
-              selectedSymbol
-            }
-          </strong>
-
-          <small>
-            Active analysis selection
-          </small>
-        </article>
-
-      </section>
-
-
-      <section className="market-controls">
-
-        <label className="market-search">
-
-          <Search size={17} />
-
-          <input
-            type="search"
-            value={search}
-            placeholder="Search symbol or asset..."
-            onChange={event =>
-              setSearch(
-                event.target.value,
-              )
-            }
-          />
-
-        </label>
-
-
-        <label className="market-quote-filter">
-
-          <span>
-            Quote
-          </span>
-
-          <select
-            value={quoteCurrency}
-            onChange={event =>
-              setQuoteCurrency(
-                event.target.value,
-              )
-            }
-          >
-            <option value="ALL">
-              All quotes
-            </option>
-
-            {metadata
-              ?.quoteCurrencies
-              .map(
-                quote => (
-                  <option
-                    value={quote}
-                    key={quote}
-                  >
-                    {quote}
-                  </option>
-                ),
-              )}
-          </select>
-
-        </label>
-
-
-        <button
-          className="market-sort-button"
-          type="button"
-          onClick={toggleSort}
-        >
-          {sortDirection ===
-          'ascending'
-            ? (
-              <ArrowDownAZ
-                size={17}
-              />
-            )
-            : (
-              <ArrowUpAZ
-                size={17}
-              />
-            )}
-
-          Sort
-        </button>
-
-      </section>
-
-
-      {error && (
-        <div className="error-banner">
-          {error}
-        </div>
-      )}
-
-
-      {loading && !metadata ? (
-        <div className="loading-card">
-          Loading available markets...
-        </div>
-      ) : (
-        <section className="markets-table-card">
-
-          <div className="markets-table-header">
-
-            <div>
-              <h2>
-                Available instruments
-              </h2>
-
-              <p>
-                Showing {
-                  filteredMarkets.length
-                } of {
-                  metadata?.markets.length ?? 0
-                } markets
-              </p>
-            </div>
-
-
-            <div className="provider-badge">
-              <Database size={13} />
-              Kraken
-            </div>
-
-          </div>
-
-
-          <div className="markets-table-scroll">
-
-            <table className="markets-table">
-
-              <thead>
-                <tr>
-                  <th>
-                    Market
-                  </th>
-
-                  <th>
-                    Symbol
-                  </th>
-
-                  <th>
-                    Base asset
-                  </th>
-
-                  <th>
-                    Quote asset
-                  </th>
-
-                  <th>
-                    Provider
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-                </tr>
-              </thead>
-
-
-              <tbody>
-
-                {filteredMarkets.map(
-                  market => {
-                    const active =
-                      marketIsActive(
-                        market,
-                      )
-
-                    return (
-                      <tr
-                        key={market.symbol}
-                        className={
-                          active
-                            ? 'active-market-row'
-                            : undefined
-                        }
-                      >
-
-                        <td>
-                          <div className="market-name-cell">
-
-                            <div className="market-avatar">
-                              {
-                                market
-                                  .baseAsset
-                                  .slice(0, 2)
-                              }
-                            </div>
-
-                            <div>
-                              <strong>
-                                {
-                                  market
-                                    .displayName
-                                }
-                              </strong>
-
-                              {active && (
-                                <small>
-                                  Dashboard selection
-                                </small>
-                              )}
-                            </div>
-
-                          </div>
-                        </td>
-
-
-                        <td className="market-code">
-                          {market.symbol}
-                        </td>
-
-
-                        <td>
-                          {market.baseAsset}
-                        </td>
-
-
-                        <td>
-                          <span className="quote-pill">
-                            {market.quoteAsset}
-                          </span>
-                        </td>
-
-
-                        <td>
-                          {market.provider}
-                        </td>
-
-
-                        <td>
-                          {active ? (
-                            <span className="market-active-status">
-                              <CheckCircle2 size={14} />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="market-available-status">
-                              Available
-                            </span>
-                          )}
-                        </td>
-
-                      </tr>
-                    )
-                  },
-                )}
-
-
-                {filteredMarkets.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="empty-market-result"
-                    >
-                      No markets match the
-                      current search and filter.
-                    </td>
-                  </tr>
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-
-          <footer className="markets-footer">
-
-            <span>
-              Market selection is managed
-              from Dashboard.
-            </span>
-
-            <Link
-              to="/dashboard"
-              className="dashboard-link"
-            >
-              Open Dashboard
-            </Link>
-
-          </footer>
-
-        </section>
-      )}
-    </>
-  )
-}
-
-
-export default MarketsPage
+import { usePreferences } from '../../preferences/PreferencesContext' import {   ArrowDownAZ,   ArrowUpAZ,   CheckCircle2,   Database,   RefreshCw,   Search, } from 'lucide-react'  import {   useEffect,   useMemo,   useState, } from 'react'  import {   Link, } from 'react-router-dom'  import {   getMarkets, } from '../../api/quantStatApi'  import type {   MarketInstrument,   MarketMetadata, } from '../../models/market'   type SortDirection =   'ascending' |   'descending'   function MarketsPage() {   const {     preferences,   } =     usePreferences()   const [metadata, setMetadata] =     useState<MarketMetadata | null>(       null,     )    const [search, setSearch] =     useState('')    const quoteCurrency =     preferences.currency    const [sortDirection, setSortDirection] =     useState<SortDirection>(       'ascending',     )    const [loading, setLoading] =     useState(true)    const [refreshKey, setRefreshKey] =     useState(0)    const [error, setError] =     useState<string | null>(       null,     )     const selectedSymbol =     localStorage.getItem(       'quantstat-symbol',     ) ?? 'ETHUSD'     useEffect(() => {     const controller =       new AbortController()      setLoading(true)     setError(null)      getMarkets(       controller.signal,     )       .then(setMetadata)       .catch((reason: unknown) => {         if (           reason instanceof DOMException &&           reason.name === 'AbortError'         ) {           return         }          setError(           reason instanceof Error             ? reason.message             : 'Markets could not be loaded.',         )       })       .finally(() => {         if (!controller.signal.aborted) {           setLoading(false)         }       })      return () =>       controller.abort()   }, [refreshKey])     const filteredMarkets =     useMemo(() => {       const normalizedSearch =         search           .trim()           .toUpperCase()        const markets =         metadata?.markets ?? []        const filtered =         markets.filter(           market => {            const matchesQuote =   market.quoteAsset ===   quoteCurrency             const matchesSearch =               normalizedSearch.length === 0               ||               market.symbol                 .toUpperCase()                 .includes(                   normalizedSearch,                 )               ||               market.displayName                 .toUpperCase()                 .includes(                   normalizedSearch,                 )               ||               market.baseAsset                 .toUpperCase()                 .includes(                   normalizedSearch,                 )               ||               market.quoteAsset                 .toUpperCase()                 .includes(                   normalizedSearch,                 )              return (               matchesQuote &&               matchesSearch             )           },         )        return [...filtered].sort(         (left, right) => {           const comparison =             left.displayName.localeCompare(               right.displayName,             )            return sortDirection ===             'ascending'             ? comparison             : -comparison         },       )     }, [       metadata,       search,       quoteCurrency,       sortDirection,     ])     const uniqueBaseAssets =     useMemo(       () =>         new Set(           metadata?.markets.map(             market =>               market.baseAsset,           ) ?? [],         ).size,       [metadata],     )     const activeMarket =     metadata?.markets.find(       market =>         market.symbol ===         selectedSymbol,     )     function toggleSort(): void {     setSortDirection(       current =>         current === 'ascending'           ? 'descending'           : 'ascending',     )   }     function marketIsActive(     market: MarketInstrument,   ): boolean {     return (       market.symbol ===       selectedSymbol     )   }     return (     <>       <section className="page-heading markets-heading">          <div>           <h1>             Markets           </h1>            <p>             Discover available market pairs             and quote currencies           </p>         </div>           <button           className="market-refresh-button"           type="button"           disabled={loading}           onClick={() =>             setRefreshKey(               current =>                 current + 1,             )           }         >           <RefreshCw             size={16}             className={               loading                 ? 'spinning'                 : undefined             }           />            Refresh         </button>        </section>         <section className="market-summary-grid">          <article className="market-summary-card">           <span>             Tradable pairs           </span>            <strong>             {metadata?.markets.length ?? 'â€”'}           </strong>            <small>             Available from the provider           </small>         </article>           <article className="market-summary-card">           <span>             Base assets           </span>            <strong>             {metadata               ? uniqueBaseAssets               : 'â€”'}           </strong>            <small>             Distinct analyzed assets           </small>         </article>           <article className="market-summary-card">           <span>             Quote currencies           </span>            <strong>             {               metadata                 ?.quoteCurrencies                 .length               ??               'â€”'             }           </strong>            <small>             Available quote markets           </small>         </article>           <article className="market-summary-card active-market-card">           <span>             Dashboard market           </span>            <strong>             {               activeMarket                 ?.displayName               ??               selectedSymbol             }           </strong>            <small>             Active analysis selection           </small>         </article>        </section>         <section className="market-controls">          <label className="market-search">            <Search size={17} />            <input             type="search"             value={search}             placeholder="Search symbol or asset..."             onChange={event =>               setSearch(                 event.target.value,               )             }           />          </label>           <div className="market-quote-filter locked-quote-filter">           <span>             Quote           </span>            <strong>             {preferences.currency}           </strong>         </div>           <button           className="market-sort-button"           type="button"           onClick={toggleSort}         >           {sortDirection ===           'ascending'             ? (               <ArrowDownAZ                 size={17}               />             )             : (               <ArrowUpAZ                 size={17}               />             )}            Sort         </button>        </section>         {error && (         <div className="error-banner">           {error}         </div>       )}         {loading && !metadata ? (         <div className="loading-card">           Loading available markets...         </div>       ) : (         <section className="markets-table-card">            <div className="markets-table-header">              <div>               <h2>                 Available instruments               </h2>                <p>                 Showing {                   filteredMarkets.length                 } of {                   metadata?.markets.length ?? 0                 } markets               </p>             </div>               <div className="provider-badge">               <Database size={13} />               Kraken             </div>            </div>             <div className="markets-table-scroll">              <table className="markets-table">                <thead>                 <tr>                   <th>                     Market                   </th>                    <th>                     Symbol                   </th>                    <th>                     Base asset                   </th>                    <th>                     Quote asset                   </th>                    <th>                     Provider                   </th>                    <th>                     Status                   </th>                 </tr>               </thead>                 <tbody>                  {filteredMarkets.map(                   market => {                     const active =                       marketIsActive(                         market,                       )                      return (                       <tr                         key={market.symbol}                         className={                           active                             ? 'active-market-row'                             : undefined                         }                       >                          <td>                           <div className="market-name-cell">                              <div className="market-avatar">                               {                                 market                                   .baseAsset                                   .slice(0, 2)                               }                             </div>                              <div>                               <strong>                                 {                                   market                                     .displayName                                 }                               </strong>                                {active && (                                 <small>                                   Dashboard selection                                 </small>                               )}                             </div>                            </div>                         </td>                           <td className="market-code">                           {market.symbol}                         </td>                           <td>                           {market.baseAsset}                         </td>                           <td>                           <span className="quote-pill">                             {market.quoteAsset}                           </span>                         </td>                           <td>                           {market.provider}                         </td>                           <td>                           {active ? (                             <span className="market-active-status">                               <CheckCircle2 size={14} />                               Active                             </span>                           ) : (                             <span className="market-available-status">                               Available                             </span>                           )}                         </td>                        </tr>                     )                   },                 )}                   {filteredMarkets.length === 0 && (                   <tr>                     <td                       colSpan={6}                       className="empty-market-result"                     >                       No markets match the                       current search and filter.                     </td>                   </tr>                 )}                </tbody>              </table>            </div>             <footer className="markets-footer">              <span>               Market selection is managed               from Dashboard.             </span>              <Link               to="/dashboard"               className="dashboard-link"             >               Open Dashboard             </Link>            </footer>          </section>       )}     </>   ) }   export default MarketsPage
