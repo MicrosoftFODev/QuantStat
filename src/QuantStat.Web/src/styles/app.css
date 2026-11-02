@@ -721,44 +721,65 @@ nav {
     grid-template-columns: 1fr;
   }
 }
-/* ==========================================================
+
+ /* ==========================================================
    FULL CHARTS
-   ========================================================== */
+   ========================================================== */ 
 
-.large-chart {
-  height: 430px;
+ .indicator-grid {
+    
+ display: grid;
+    
+ grid-template-columns: minmax(0, 1fr);
+    
+ gap: 18px;
+    
+ width: 100%;
+    
+
 }
 
-.indicator-grid {
-  display: grid;
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-  gap: 18px;
+
+
+ .indicator-card {
+    
+ width: 100%;
+    
+ min-width: 0;
+    
+ padding: 20px;
+    
+ background: var(--surface);
+    
+ border: 1px solid var(--border);
+    
+ border-radius: 16px;
+    
+ box-shadow: 0 14px 45px rgba(0, 0, 0, 0.06);
+    
+
 }
 
-.indicator-card {
-  padding: 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow:
-    0 14px 45px
-    rgba(0, 0, 0, 0.06);
+
+
+ .indicator-chart {
+    
+ width: 100%;
+    
+ height: 260px;
+    
+
 }
 
-.indicator-card:last-child {
-  grid-column: 1 / -1;
-}
 
-.indicator-chart {
-  width: 100%;
-  height: 260px;
-}
 
-.indicator-value {
-  font-size: 22px;
-  font-variant-numeric:
-    tabular-nums;
+ .indicator-value {
+    
+ font-size: 22px;
+    
+ font-variant-numeric: tabular-nums;
+    
+
 }
 
 @media (max-width: 1000px) {

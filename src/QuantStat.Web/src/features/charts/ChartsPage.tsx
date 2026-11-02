@@ -370,15 +370,18 @@ function ChartsPage() {
 
               <ResponsiveContainer>
 
-                <ComposedChart
-                  data={chartData}
-                  margin={{
-                    top: 12,
-                    right: 22,
+            <ComposedChart
+  data={ chartData }
+        syncId = "market-analysis"
+        syncMethod = "index"
+        margin = {{
+            top: 12,
+                right: 22,
                     left: 10,
-                    bottom: 0,
-                  }}
-                >
+                        bottom: 0,
+  }
+    }
+>
 
                   <CartesianGrid
                     stroke="var(--grid)"
@@ -423,7 +426,8 @@ function ChartsPage() {
                     dataKey="price"
                     stroke="#6c8cff"
                     strokeWidth={2.4}
-                    dot={false}
+dot = { false}
+activeDot = { false}
                     name="Price"
                   />
 
@@ -433,7 +437,8 @@ function ChartsPage() {
                     stroke="#f59e0b"
                     strokeWidth={1.7}
                     strokeDasharray="7 5"
-                    dot={false}
+                    dot = { false}
+                    activeDot = { false}
                     name="Mean"
                   />
 
@@ -494,15 +499,17 @@ function ChartsPage() {
 
                       <ResponsiveContainer>
 
-                        <LineChart
-                          data={chartData}
-                          margin={{
-                            top: 10,
-                            right: 12,
-                            left: 0,
-                            bottom: 0,
-                          }}
-                        >
+    <LineChart
+  data={ chartData }
+syncId = "market-analysis"
+syncMethod = "index"
+margin = {{
+    top: 10,
+        right: 12,
+            left: 0,
+                bottom: 0,
+  }}
+>
 
                           <CartesianGrid
                             stroke="var(--grid)"
@@ -591,7 +598,8 @@ function ChartsPage() {
                             dataKey={indicator.key}
                             stroke={indicator.color}
                             strokeWidth={2}
-                            dot={false}
+                            dot = { false}
+                            activeDot = { false}
                             connectNulls={false}
                             name={indicator.title}
                           />
