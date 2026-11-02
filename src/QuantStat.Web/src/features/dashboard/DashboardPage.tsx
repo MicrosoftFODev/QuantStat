@@ -178,6 +178,7 @@ function DashboardPage() {
 
     setLoading(true)
     setError(null)
+    setDashboard(null)
 
     getDashboard(
       symbol,
@@ -241,6 +242,83 @@ function DashboardPage() {
         },
       ).format(value)
 
+
+  /*
+   * quantstat-dashboard-currency-validation
+   *
+   * When the preferred quote currency changes:
+   * 1. Validate the current symbol.
+   * 2. Clear data from the previous currency.
+   * 3. Select the first compatible market.
+   * 4. Persist and announce the new symbol.
+   */
+  useEffect(() => {
+    if (!metadata) {
+      return
+    }
+
+    const currencyMarkets =
+      metadata.markets.filter(
+        market =>
+          market.quoteAsset ===
+          preferences.currency,
+      )
+
+    if (currencyMarkets.length === 0) {
+      setDashboard(null)
+      return
+    }
+
+    const currentMarketIsValid =
+      currencyMarkets.some(
+        market =>
+          market.symbol ===
+          symbol,
+      )
+
+    if (currentMarketIsValid) {
+      return
+    }
+
+    const nextSymbol =
+      currencyMarkets[0].symbol
+
+    /*
+     * Remove the chart belonging to the
+     * previous quote currency immediately.
+     */
+    setDashboard(null)
+    setLoading(true)
+    setError(null)
+
+    setSymbol(
+      nextSymbol,
+    )
+
+    localStorage.setItem(
+      'quantstat-symbol',
+      nextSymbol,
+    )
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'quantstat-market-selection-changed',
+        {
+          detail: {
+            symbol:
+              nextSymbol,
+
+            currency:
+              preferences.currency,
+          },
+        },
+      ),
+    )
+  }, [
+    metadata,
+    preferences.currency,
+    symbol,
+  ])
 
   const chartData =
     useMemo(
