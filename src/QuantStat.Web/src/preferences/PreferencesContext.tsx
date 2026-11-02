@@ -21,10 +21,6 @@ export type AppTheme =
   | 'light'
   | 'system'
 
-export type AppLanguage =
-  | 'en'
-  | 'el'
-
 export type QuoteCurrency =
   | 'USD'
   | 'EUR'
@@ -37,7 +33,6 @@ export type QuoteCurrency =
 
 export interface UserPreferences {
   theme: AppTheme
-  language: AppLanguage
   currency: QuoteCurrency
 }
 
@@ -46,7 +41,7 @@ interface PreferencesContextValue {
   preferences: UserPreferences
   effectiveTheme: 'dark' | 'light'
   setTheme: (theme: AppTheme) => void
-  setLanguage: (language: AppLanguage) => void
+  setLanguage: () => void
   setCurrency: (currency: QuoteCurrency) => void
   translate: (key: TranslationKey) => string
 }
@@ -55,7 +50,6 @@ interface PreferencesContextValue {
 const defaultPreferences:
   UserPreferences = {
     theme: 'dark',
-    language: 'en',
     currency: 'USD',
   }
 
@@ -195,11 +189,6 @@ function loadPreferences(
           ? parsed.theme
           : 'dark',
 
-      language:
-        parsed.language === 'el'
-          ? 'el'
-          : 'en',
-
       currency:
         parsed.currency === 'EUR' ||
         parsed.currency === 'GBP' ||
@@ -274,11 +263,6 @@ export function PreferencesProvider({
     )
 
     localStorage.setItem(
-      'quantstat-language',
-      preferences.language,
-    )
-
-    localStorage.setItem(
       'quantstat-currency',
       preferences.currency,
     )
@@ -324,11 +308,6 @@ export function PreferencesProvider({
           .dataset
           .theme =
             nextTheme
-
-        document
-          .documentElement
-          .lang =
-            preferences.language
       }
 
     applyTheme()
@@ -343,10 +322,7 @@ export function PreferencesProvider({
         'change',
         applyTheme,
       )
-  }, [
-    preferences.theme,
-    preferences.language,
-  ])
+  }, [preferences.theme])
 
 
   const value =
@@ -361,15 +337,6 @@ export function PreferencesProvider({
               current => ({
                 ...current,
                 theme,
-              }),
-            ),
-
-        setLanguage:
-          language =>
-            setPreferences(
-              current => ({
-                ...current,
-                language,
               }),
             ),
 
@@ -400,9 +367,7 @@ export function PreferencesProvider({
 
         translate:
           key =>
-            translations[
-              preferences.language
-            ][key],
+            translations.en[key],
       }),
       [
         preferences,

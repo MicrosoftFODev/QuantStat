@@ -239,10 +239,6 @@ function AppLayout() {
           <div className="toolbar-actions">
 
             <span className="toolbar-preference">
-              {preferences.language.toUpperCase()}
-            </span>
-
-            <span className="toolbar-preference">
               {preferences.currency}
             </span>
 

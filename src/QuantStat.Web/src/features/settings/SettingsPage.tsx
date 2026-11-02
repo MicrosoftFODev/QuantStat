@@ -1,5 +1,4 @@
 import {
-  Languages,
   Monitor,
   Moon,
   Palette,
@@ -17,7 +16,6 @@ import {
 } from '../../preferences/PreferencesContext'
 
 import type {
-  AppLanguage,
   AppTheme,
   QuoteCurrency,
 } from '../../preferences/PreferencesContext'
@@ -77,7 +75,6 @@ function SettingsPage() {
   const {
     preferences,
     setTheme,
-    setLanguage,
     setCurrency,
     translate,
   } =
@@ -167,63 +164,6 @@ function SettingsPage() {
                 )
               },
             )}
-
-          </div>
-
-        </article>
-
-
-        <article className="settings-card">
-
-          <div className="settings-card-heading">
-
-            <Languages size={20} />
-
-            <div>
-              <h2>
-                {translate(
-                  'language',
-                )}
-              </h2>
-
-              <p>
-                English / Î•Î»Î»Î·Î½Î¹ÎºÎ¬
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="settings-field">
-
-            <label>
-              {translate(
-                'language',
-              )}
-
-              <select
-                value={
-                  preferences.language
-                }
-                onChange={event =>
-                  setLanguage(
-                    event.target.value as AppLanguage
-                  )
-                }
-              >
-                <option value="en">
-                  {translate(
-                    'english',
-                  )}
-                </option>
-
-                <option value="el">
-                  {translate(
-                    'greek',
-                  )}
-                </option>
-              </select>
-            </label>
 
           </div>
 
