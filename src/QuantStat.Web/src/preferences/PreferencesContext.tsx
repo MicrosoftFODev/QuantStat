@@ -373,14 +373,30 @@ export function PreferencesProvider({
               }),
             ),
 
-        setCurrency:
-          currency =>
-            setPreferences(
-              current => ({
-                ...current,
-                currency,
-              }),
-            ),
+          setCurrency:
+              currency => {
+                  setPreferences(
+                      current => ({
+                          ...current,
+                          currency,
+                      }),
+                  )
+
+                  localStorage.removeItem(
+                      'quantstat-symbol',
+                  )
+
+                  window.dispatchEvent(
+                      new CustomEvent(
+                          'quantstat-market-selection-invalidated',
+                          {
+                              detail: {
+                                  currency,
+                              },
+                          },
+                      ),
+                  )
+              },
 
         translate:
           key =>
