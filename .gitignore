@@ -1,0 +1,37 @@
+﻿# .NET
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Node
+**/node_modules/
+**/dist/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Certificates / secrets
+*.pfx
+*.p12
+*.key
+
+# Logs
+*.log
+
+# Testing
+TestResults/
+coverage/
+
+# Editors
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
