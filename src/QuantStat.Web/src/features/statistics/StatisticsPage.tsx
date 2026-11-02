@@ -18,29 +18,6 @@ import type {
   StatisticsResponse,
 } from './statisticsModels'
 
-import type {
-  MarketMetadata,
-} from '../../models/market'
-
-interface Props {
-  metadata: MarketMetadata | null
-  symbol: string
-  interval: number
-  periodDays: number
-
-  onSymbolChange: (
-    value: string
-  ) => void
-
-  onIntervalChange: (
-    value: number
-  ) => void
-
-  onPeriodChange: (
-    value: number
-  ) => void
-}
-
 
 function decimal(
   value: number,
@@ -64,15 +41,83 @@ function percent(
 }
 
 
-function StatisticsPage({
-  metadata,
-  symbol,
-  interval,
-  periodDays,
-  onSymbolChange,
-  onIntervalChange,
-  onPeriodChange,
-}: Props) {
+function intervalLabel(
+  minutes: number,
+): string {
+  const labels:
+    Record<number, string> = {
+      1: '1 Minute',
+      5: '5 Minutes',
+      15: '15 Minutes',
+      30: '30 Minutes',
+      60: '1 Hour',
+      240: '4 Hours',
+      1440: '1 Day',
+      10080: '1 Week',
+      21600: '15 Days',
+    }
+
+  return labels[minutes] ??
+    `${minutes} Minutes`
+}
+
+
+function periodLabel(
+  days: number,
+): string {
+  const labels:
+    Record<number, string> = {
+      30: '30 Days',
+      90: '90 Days',
+      180: '180 Days',
+      365: '1 Year',
+      720: 'Maximum',
+    }
+
+  return labels[days] ??
+    `${days} Days`
+}
+
+
+function displaySymbol(
+  symbol: string,
+): string {
+  const quotes = [
+    'USDT',
+    'USDC',
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'BTC',
+    'ETH',
+  ]
+
+  const quote =
+    quotes.find(
+      candidate =>
+        symbol.endsWith(candidate) &&
+        symbol.length > candidate.length,
+    )
+
+  if (!quote) {
+    return symbol
+  }
+
+  const base =
+    symbol.slice(
+      0,
+      -quote.length,
+    )
+
+  return `${base}/${quote}`
+}
+
+
+function StatisticsPage() {
   const [data, setData] =
     useState<StatisticsResponse | null>(
       null,
@@ -84,6 +129,25 @@ function StatisticsPage({
   const [error, setError] =
     useState<string | null>(
       null,
+    )
+
+  const symbol =
+    localStorage.getItem(
+      'quantstat-symbol',
+    ) ?? 'ETHUSD'
+
+  const interval =
+    Number(
+      localStorage.getItem(
+        'quantstat-interval',
+      ) ?? 1440,
+    )
+
+  const periodDays =
+    Number(
+      localStorage.getItem(
+        'quantstat-period-days',
+      ) ?? 365,
     )
 
 
@@ -137,100 +201,61 @@ function StatisticsPage({
   return (
     <>
       <section className="page-heading">
+
         <div>
-          <h1>Statistics</h1>
+          <h1>
+            Statistics
+          </h1>
+
           <p>
             Descriptive statistics and
             return-distribution analysis
           </p>
         </div>
+
       </section>
 
 
-      <section className="filters">
-        <label>
-          Market
+      <section className="selection-summary">
 
-          <select
-            value={symbol}
-            onChange={event =>
-              onSymbolChange(
-                event.target.value,
-              )
-            }
-          >
-            {metadata?.markets.map(
-              market => (
-                <option
-                  key={market.symbol}
-                  value={market.symbol}
-                >
-                  {market.displayName}
-                </option>
-              ),
-            )}
+        <div>
+          <span>
+            Market
+          </span>
 
-            {!metadata && (
-              <option value="ETHUSD">
-                ETH/USD
-              </option>
-            )}
-          </select>
-        </label>
+          <strong>
+            {displaySymbol(symbol)}
+          </strong>
+        </div>
 
 
-        <label>
-          Interval
+        <div>
+          <span>
+            Interval
+          </span>
 
-          <select
-            value={interval}
-            onChange={event =>
-              onIntervalChange(
-                Number(
-                  event.target.value,
-                ),
-              )
-            }
-          >
-            {metadata?.intervals.map(
-              item => (
-                <option
-                  key={item.minutes}
-                  value={item.minutes}
-                >
-                  {item.name}
-                </option>
-              ),
-            )}
-          </select>
-        </label>
+          <strong>
+            {intervalLabel(interval)}
+          </strong>
+        </div>
 
 
-        <label>
-          Period
+        <div>
+          <span>
+            Period
+          </span>
 
-          <select
-            value={periodDays}
-            onChange={event =>
-              onPeriodChange(
-                Number(
-                  event.target.value,
-                ),
-              )
-            }
-          >
-            {metadata?.periods.map(
-              item => (
-                <option
-                  key={item.days}
-                  value={item.days}
-                >
-                  {item.name}
-                </option>
-              ),
-            )}
-          </select>
-        </label>
+          <strong>
+            {periodLabel(periodDays)}
+          </strong>
+        </div>
+
+
+        <div className="selection-note">
+          Change the analysis selection
+          from the Dashboard.
+        </div>
+
       </section>
 
 
@@ -250,9 +275,11 @@ function StatisticsPage({
 
       {result && (
         <>
+
           <section className="statistics-summary-grid">
 
             <article className="metric-card">
+
               <BarChart3
                 size={18}
                 className="stat-icon"
@@ -269,10 +296,12 @@ function StatisticsPage({
               <small>
                 Valid closing prices
               </small>
+
             </article>
 
 
             <article className="metric-card">
+
               <Sigma
                 size={18}
                 className="stat-icon"
@@ -292,10 +321,12 @@ function StatisticsPage({
               <small>
                 Arithmetic mean
               </small>
+
             </article>
 
 
             <article className="metric-card">
+
               <Activity
                 size={18}
                 className="stat-icon"
@@ -314,10 +345,12 @@ function StatisticsPage({
               <small>
                 Annualized estimate
               </small>
+
             </article>
 
 
             <article className="metric-card">
+
               <TrendingUp
                 size={18}
                 className="stat-icon"
@@ -337,6 +370,7 @@ function StatisticsPage({
               <small>
                 Average period return
               </small>
+
             </article>
 
           </section>
@@ -345,15 +379,18 @@ function StatisticsPage({
           <section className="statistics-sections">
 
             <article className="statistics-card">
+
               <div className="statistics-card-header">
+
                 <h2>
                   Price statistics
                 </h2>
 
                 <p>
-                  Description of the
-                  selected closing-price sample
+                  Description of the selected
+                  closing-price sample
                 </p>
+
               </div>
 
 
@@ -372,13 +409,13 @@ function StatisticsPage({
 
                 <div>
                   <span>
-                    Mean
+                    Arithmetic mean
                   </span>
 
                   <strong>
                     {decimal(
                       result.meanPrice,
-                      4,
+                      6,
                     )}
                   </strong>
                 </div>
@@ -392,7 +429,7 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.minimumPrice,
-                      4,
+                      6,
                     )}
                   </strong>
                 </div>
@@ -406,25 +443,29 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.maximumPrice,
-                      4,
+                      6,
                     )}
                   </strong>
                 </div>
 
               </div>
+
             </article>
 
 
             <article className="statistics-card">
+
               <div className="statistics-card-header">
+
                 <h2>
                   Return statistics
                 </h2>
 
                 <p>
-                  Statistics calculated from
-                  continuously compounded returns
+                  Continuously compounded
+                  market returns
                 </p>
+
               </div>
 
 
@@ -438,7 +479,7 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.meanLogReturn,
-                      8,
+                      10,
                     )}
                   </strong>
                 </div>
@@ -452,7 +493,7 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.returnVariance,
-                      8,
+                      10,
                     )}
                   </strong>
                 </div>
@@ -460,13 +501,13 @@ function StatisticsPage({
 
                 <div>
                   <span>
-                    Standard deviation
+                    Sample standard deviation
                   </span>
 
                   <strong>
                     {decimal(
                       result.returnStandardDeviation,
-                      8,
+                      10,
                     )}
                   </strong>
                 </div>
@@ -486,19 +527,23 @@ function StatisticsPage({
                 </div>
 
               </div>
+
             </article>
 
 
             <article className="statistics-card">
+
               <div className="statistics-card-header">
+
                 <h2>
                   Distribution shape
                 </h2>
 
                 <p>
-                  Higher-moment characteristics
-                  of the return distribution
+                  Adjusted higher-moment
+                  estimators
                 </p>
+
               </div>
 
 
@@ -512,7 +557,7 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.skewness,
-                      6,
+                      8,
                     )}
                   </strong>
                 </div>
@@ -526,32 +571,38 @@ function StatisticsPage({
                   <strong>
                     {decimal(
                       result.excessKurtosis,
-                      6,
+                      8,
                     )}
                   </strong>
                 </div>
 
               </div>
+
             </article>
 
 
             <article className="statistics-card">
+
               <div className="statistics-card-header">
+
                 <h2>
-                  Return quantiles
+                  Empirical quantiles
                 </h2>
 
                 <p>
-                  Empirical return-distribution
-                  thresholds
+                  Linear-interpolated
+                  return thresholds
                 </p>
+
               </div>
 
 
               <div className="quantile-grid">
 
                 <div>
-                  <span>5%</span>
+                  <span>
+                    5%
+                  </span>
 
                   <strong>
                     {percent(
@@ -563,7 +614,9 @@ function StatisticsPage({
 
 
                 <div>
-                  <span>10%</span>
+                  <span>
+                    10%
+                  </span>
 
                   <strong>
                     {percent(
@@ -575,7 +628,9 @@ function StatisticsPage({
 
 
                 <div>
-                  <span>90%</span>
+                  <span>
+                    90%
+                  </span>
 
                   <strong>
                     {percent(
@@ -587,7 +642,9 @@ function StatisticsPage({
 
 
                 <div>
-                  <span>95%</span>
+                  <span>
+                    95%
+                  </span>
 
                   <strong>
                     {percent(
@@ -598,9 +655,11 @@ function StatisticsPage({
                 </div>
 
               </div>
+
             </article>
 
           </section>
+
         </>
       )}
     </>

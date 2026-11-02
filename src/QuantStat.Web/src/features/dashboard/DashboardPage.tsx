@@ -1,4 +1,4 @@
-﻿import {
+import {
   CartesianGrid,
   ComposedChart,
   Line,
@@ -61,13 +61,32 @@ function DashboardPage() {
     )
 
   const [symbol, setSymbol] =
-    useState('ETHUSD')
+    useState(
+    () =>
+      localStorage.getItem(
+        'quantstat-symbol',
+      ) ?? 'ETHUSD',
+  )
 
   const [interval, setInterval] =
-    useState(1440)
+    useState(
+    () =>
+      Number(
+        localStorage.getItem(
+          'quantstat-interval',
+        ) ?? 1440,
+      ),
+  )
 
   const [periodDays, setPeriodDays] =
-    useState(365)
+    useState(
+    () =>
+      Number(
+        localStorage.getItem(
+          'quantstat-period-days',
+        ) ?? 365,
+      ),
+  )
 
   const [loading, setLoading] =
     useState(true)
@@ -78,6 +97,27 @@ function DashboardPage() {
     )
 
 
+
+  useEffect(() => {
+    localStorage.setItem(
+      'quantstat-symbol',
+      symbol,
+    )
+
+    localStorage.setItem(
+      'quantstat-interval',
+      interval.toString(),
+    )
+
+    localStorage.setItem(
+      'quantstat-period-days',
+      periodDays.toString(),
+    )
+  }, [
+    symbol,
+    interval,
+    periodDays,
+  ])
   useEffect(() => {
     const controller =
       new AbortController()

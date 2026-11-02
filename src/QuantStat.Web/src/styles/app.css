@@ -662,3 +662,111 @@ nav {
   background: var(--accent-soft);
   border-radius: 999px;
 }
+
+/* ==========================================================
+   SHARED DASHBOARD SELECTION
+   ========================================================== */
+
+.selection-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(150px, 1fr))
+    minmax(240px, 1.4fr);
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+}
+
+.selection-summary > div {
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 9px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.selection-summary span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.selection-summary strong {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.selection-summary .selection-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .selection-summary {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .selection-summary {
+    grid-template-columns: 1fr;
+  }
+}
+/* ==========================================================
+   FULL CHARTS
+   ========================================================== */
+
+.large-chart {
+  height: 430px;
+}
+
+.indicator-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.indicator-card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow:
+    0 14px 45px
+    rgba(0, 0, 0, 0.06);
+}
+
+.indicator-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.indicator-chart {
+  width: 100%;
+  height: 260px;
+}
+
+.indicator-value {
+  font-size: 22px;
+  font-variant-numeric:
+    tabular-nums;
+}
+
+@media (max-width: 1000px) {
+  .indicator-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .indicator-card:last-child {
+    grid-column: auto;
+  }
+}

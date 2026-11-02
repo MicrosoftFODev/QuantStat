@@ -1,4 +1,7 @@
-﻿import {
+import ChartsPage from './features/charts/ChartsPage'
+import './styles/app.css'
+
+import {
   Navigate,
   Route,
   Routes,
@@ -58,10 +61,7 @@ function App() {
         <Route
           path="/charts"
           element={
-            <PlaceholderPage
-              title="Charts"
-              description="Interactive quantitative chart analysis"
-            />
+            <ChartsPage />
           }
         />
 
@@ -69,7 +69,7 @@ function App() {
         <Route
           path="/statistics"
           element={
-            <StatisticsPageWrapper />
+            <StatisticsPage />
           }
         />
 
@@ -144,63 +144,4 @@ function App() {
  * Charts and Forecast all use the same
  * selected market.
  */
-import {
-  useEffect,
-  useState,
-} from 'react'
-
-import {
-  getMarkets,
-} from './api/quantStatApi'
-
-import type {
-  MarketMetadata,
-} from './models/market'
-
-
-function StatisticsPageWrapper() {
-  const [metadata, setMetadata] =
-    useState<MarketMetadata | null>(
-      null,
-    )
-
-  const [symbol, setSymbol] =
-    useState('ETHUSD')
-
-  const [interval, setInterval] =
-    useState(1440)
-
-  const [periodDays, setPeriodDays] =
-    useState(365)
-
-
-  useEffect(() => {
-    const controller =
-      new AbortController()
-
-    getMarkets(
-      controller.signal,
-    )
-      .then(setMetadata)
-      .catch(console.error)
-
-    return () =>
-      controller.abort()
-  }, [])
-
-
-  return (
-    <StatisticsPage
-      metadata={metadata}
-      symbol={symbol}
-      interval={interval}
-      periodDays={periodDays}
-      onSymbolChange={setSymbol}
-      onIntervalChange={setInterval}
-      onPeriodChange={setPeriodDays}
-    />
-  )
-}
-
-
 export default App
