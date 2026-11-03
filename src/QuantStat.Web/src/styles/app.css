@@ -2501,3 +2501,110 @@ nav {
     grid-template-columns: 1fr;
   }
 }
+/* ==========================================================
+   DATA IMPORT PHASE 1
+   ========================================================== */
+.import-upload-card,.import-panel,.import-preview-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 14px 45px rgba(0,0,0,.05)}
+.import-upload-card{margin-bottom:18px}.import-drop-zone{width:100%;min-height:190px;display:grid;place-items:center;align-content:center;gap:10px;padding:30px;color:var(--muted);background:linear-gradient(145deg,transparent,var(--accent-soft));border:1px dashed rgba(108,140,255,.5);border-radius:16px}.import-drop-zone:hover{color:var(--text);border-color:var(--accent)}.import-drop-zone strong{color:var(--text);font-size:16px}.import-drop-zone span{font-size:11px}
+.import-file-summary{min-height:86px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:18px 20px}.import-file-summary strong,.import-file-summary span{display:block}.import-file-summary span{margin-top:5px;color:var(--muted);font-size:11px}.import-file-summary button{width:36px;height:36px;display:grid;place-items:center;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:10px}
+.import-sheet-tabs{display:flex;gap:8px;padding-bottom:12px;overflow-x:auto}.import-sheet-tabs button{flex:0 0 auto;min-height:39px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:10px}.import-sheet-tabs button.active{color:var(--text);background:var(--accent-soft);border-color:rgba(108,140,255,.5)}.import-sheet-tabs small{min-width:21px;padding:2px 5px;text-align:center;background:var(--surface-2);border-radius:999px;font-size:8px}
+.import-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}.import-panel{min-width:0;padding:19px}.import-panel header,.import-preview-card>header{display:flex;align-items:flex-start;gap:11px;margin-bottom:17px}.import-panel h2,.import-preview-card h2{margin:0;font-size:15px}.import-panel p,.import-preview-card p{margin:5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}.import-panel label{display:grid;gap:6px;margin-top:12px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em}.import-panel select,.import-panel input{width:100%;height:40px;padding:0 10px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:9px;outline:0}.import-panel select:focus,.import-panel input:focus{border-color:var(--accent)}
+.import-select-all{min-height:37px;display:inline-flex;align-items:center;gap:7px;padding:0 11px;margin-bottom:10px;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:9px}.import-company-list{max-height:240px;display:grid;gap:6px;overflow-y:auto}.import-company-list button{min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px;color:var(--muted);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;text-align:left}.import-company-list button.selected{color:var(--text);background:var(--accent-soft);border-color:rgba(108,140,255,.4)}.import-empty{padding:25px 10px;color:var(--muted);font-size:11px;text-align:center}.import-date-summary{display:grid;gap:6px;padding:12px;margin-top:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px}.import-date-summary span{color:var(--muted);font-size:9px;text-transform:uppercase}.import-date-summary strong{font-size:11px}
+.import-preview-card{overflow:hidden}.import-preview-card>header{align-items:center;justify-content:space-between;padding:18px 20px;margin:0;border-bottom:1px solid var(--border)}.import-preview-card>header>strong{color:var(--accent);font-size:11px}.import-table-scroll{max-height:510px;overflow:auto}.import-table{width:100%;border-collapse:collapse}.import-table th{position:sticky;top:0;padding:11px 15px;color:var(--muted);background:var(--surface-2);border-bottom:1px solid var(--border);font-size:9px;text-align:left;text-transform:uppercase}.import-table td{padding:11px 15px;color:var(--muted);border-bottom:1px solid var(--border);font-size:11px}.import-table tbody tr:hover{background:rgba(108,140,255,.04)}.import-empty-table{padding:45px!important;text-align:center}.import-preview-card footer{padding:12px 18px;color:var(--muted);background:var(--surface-2);font-size:10px}
+@media(max-width:1050px){.import-mapping-grid{grid-template-columns:1fr 1fr}.import-panel:last-child{grid-column:1/-1}}@media(max-width:700px){.import-mapping-grid{grid-template-columns:1fr}.import-panel:last-child{grid-column:auto}.import-preview-card>header{align-items:flex-start;flex-direction:column}.import-table{min-width:620px}}
+/* IMPORT DATE MATRIX AND COVARIANCE */
+.import-all-data{max-height:720px}.import-matrix-table{min-width:max-content}.import-matrix-table th:first-child,.import-matrix-table td:first-child{position:sticky;left:0;z-index:2;background:var(--surface-2)}.import-matrix-table td:first-child{background:var(--surface)}.import-missing-value{color:var(--negative)!important;font-style:italic}.import-covariance-card{margin-top:18px}.covariance-table{min-width:max-content}.covariance-table th{white-space:nowrap}.covariance-table tbody th{padding:11px 15px;color:var(--text);background:var(--surface-2);border-bottom:1px solid var(--border);font-size:10px;text-align:left}.covariance-table td{min-width:112px;color:var(--text);font-family:"Cascadia Code",Consolas,monospace;font-size:10px;text-align:center;font-variant-numeric:tabular-nums}.import-covariance-empty{padding:55px 20px;color:var(--muted);text-align:center}
+/* ==========================================================
+   IMPORT CORRELATION VOLATILITY V2
+   ========================================================== */
+
+.import-analysis-subsection {
+  margin-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.import-analysis-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.import-analysis-heading h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.import-analysis-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.import-analysis-heading > strong {
+  color: var(--accent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.import-volatility-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(185px, 1fr)
+    );
+  gap: 12px;
+  padding: 20px;
+}
+
+.import-volatility-grid > article {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.import-volatility-grid > article > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.import-volatility-grid > article > strong {
+  color: var(--text);
+  font-size: 19px;
+}
+
+.import-volatility-grid > article >mall {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.import-risk-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 9px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.import-risk-detail span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.import-risk-detail strong {
+  color: var(--text);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+/* IMPORT FINAL RISK ANALYSIS */
+.import-volatility-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;padding:20px}.import-volatility-grid>article{display:grid;gap:6px;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}.import-volatility-grid>article>span,.import-volatility-grid>article>small{color:var(--muted);font-size:10px}.import-volatility-grid>article>strong{font-size:19px}.import-risk-detail{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:9px;margin-top:6px;border-top:1px solid var(--border)}.import-risk-detail span{color:var(--muted);font-size:9px}.import-risk-detail strong{font-size:10px}.import-distribution-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;padding:18px}.import-distribution-card{min-width:0;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}.import-distribution-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.import-distribution-card h3{margin:0;font-size:14px}.import-distribution-card header span,.import-distribution-card header strong{color:var(--muted);font-size:10px}.import-distribution-chart{height:245px}.import-distribution-card>footer{display:flex;flex-wrap:wrap;gap:8px 14px;padding-top:12px;border-top:1px solid var(--border);color:var(--muted);font-size:9px}@media(max-width:700px){.import-distribution-grid{grid-template-columns:1fr}}
