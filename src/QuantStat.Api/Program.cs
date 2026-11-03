@@ -7,6 +7,13 @@ using QuantStat.Core.Statistics;
 var builder =
     WebApplication.CreateBuilder(args);
 
+string port =
+    Environment.GetEnvironmentVariable(
+        "PORT") ?? "5094";
+
+builder.WebHost.UseUrls(
+    $"http://0.0.0.0:{port}");
+
 builder.Services.AddHttpClient<KrakenMarketDataProvider>(
     client =>
     {
@@ -41,7 +48,8 @@ builder.Services.AddCors(
                 policy
                     .WithOrigins(
                         "http://localhost:5173",
-                        "https://localhost:5173")
+                        "https://localhost:5173",
+                        "https://glittering-pegasus-87a130.netlify.app")
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
