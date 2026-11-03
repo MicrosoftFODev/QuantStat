@@ -38,12 +38,11 @@ export interface UserPreferences {
 
 
 interface PreferencesContextValue {
-  preferences: UserPreferences
-  effectiveTheme: 'dark' | 'light'
-  setTheme: (theme: AppTheme) => void
-  setLanguage: () => void
-  setCurrency: (currency: QuoteCurrency) => void
-  translate: (key: TranslationKey) => string
+    preferences: UserPreferences
+    effectiveTheme: 'dark' | 'light'
+    setTheme: (theme: AppTheme) => void
+    setCurrency: (currency: QuoteCurrency) => void
+    translate: (key: TranslationKey) => string
 }
 
 
