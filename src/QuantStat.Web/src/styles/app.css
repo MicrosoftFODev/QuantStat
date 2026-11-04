@@ -2501,3 +2501,626 @@ nav {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================
+   QUANTSTAT MOTION SYSTEM V1
+   ========================================================== */
+
+/*
+   Motion is intentionally subtle.
+   QuantStat is a quantitative application, so data should
+   remain visually stable and readable.
+*/
+
+
+/* ----------------------------------------------------------
+   KEYFRAMES
+   ---------------------------------------------------------- */
+
+@keyframes qs-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+@keyframes qs-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+@keyframes qs-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+@keyframes qs-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+
+@keyframes qs-soft-pulse {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+@keyframes qs-status-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0
+      rgba(52, 211, 153, 0.35);
+  }
+
+  70% {
+    box-shadow:
+      0 0 0 7px
+      rgba(52, 211, 153, 0);
+  }
+
+  100% {
+    box-shadow:
+      0 0 0 0
+      rgba(52, 211, 153, 0);
+  }
+}
+
+
+/* ----------------------------------------------------------
+   APPLICATION
+   ---------------------------------------------------------- */
+
+.app-shell {
+  animation:
+    qs-fade-in
+    280ms
+    ease-out
+    both;
+}
+
+
+/* ----------------------------------------------------------
+   SIDEBAR
+   ---------------------------------------------------------- */
+
+.sidebar {
+  animation:
+    qs-slide-right
+    320ms
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
+}
+
+
+.brand {
+  animation:
+    qs-fade-up
+    380ms
+    40ms
+    ease-out
+    both;
+}
+
+
+.nav-item {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+
+.nav-item:hover {
+  transform:
+    translateX(3px);
+}
+
+
+.nav-item svg {
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+
+.nav-item:hover svg {
+  transform:
+    scale(1.08);
+}
+
+
+.nav-item.active {
+  animation:
+    qs-scale-in
+    220ms
+    ease-out
+    both;
+}
+
+
+/* ----------------------------------------------------------
+   TOOLBAR
+   ---------------------------------------------------------- */
+
+.app-toolbar {
+  animation:
+    qs-fade-in
+    320ms
+    80ms
+    ease-out
+    both;
+}
+
+
+.theme-button {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+
+.theme-button:hover {
+  transform:
+    translateY(-1px)
+    scale(1.04);
+}
+
+
+.theme-button:active {
+  transform:
+    scale(0.96);
+}
+
+
+.status-dot {
+  animation:
+    qs-status-pulse
+    2.4s
+    ease-out
+    infinite;
+}
+
+
+/* ----------------------------------------------------------
+   PAGE HEADINGS
+   ---------------------------------------------------------- */
+
+.page-heading {
+  animation:
+    qs-fade-up
+    390ms
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
+}
+
+
+.page-heading h1 {
+  transition:
+    color 220ms ease;
+}
+
+
+/* ----------------------------------------------------------
+   CARDS
+   ---------------------------------------------------------- */
+
+.summary-card,
+.metric-card,
+.chart-card,
+.dashboard-card,
+.market-summary-card,
+.markets-table-card,
+.statistics-card,
+.dictionary-card,
+.settings-card,
+.placeholder-card {
+  transition:
+    transform 200ms
+      cubic-bezier(
+        0.22,
+        1,
+        0.36,
+        1
+      ),
+    box-shadow 200ms ease,
+    border-color 200ms ease,
+    background-color 200ms ease;
+}
+
+
+.summary-card:hover,
+.metric-card:hover,
+.chart-card:hover,
+.dashboard-card:hover,
+.market-summary-card:hover,
+.statistics-card:hover,
+.dictionary-card:hover,
+.settings-card:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 14px 34px
+    rgba(0, 0, 0, 0.10);
+}
+
+
+/* ----------------------------------------------------------
+   DASHBOARD
+   ---------------------------------------------------------- */
+
+.dashboard-grid > *,
+.market-summary-grid > * {
+  animation:
+    qs-fade-up
+    420ms
+    ease-out
+    both;
+}
+
+
+.dashboard-grid > *:nth-child(1),
+.market-summary-grid > *:nth-child(1) {
+  animation-delay:
+    40ms;
+}
+
+
+.dashboard-grid > *:nth-child(2),
+.market-summary-grid > *:nth-child(2) {
+  animation-delay:
+    80ms;
+}
+
+
+.dashboard-grid > *:nth-child(3),
+.market-summary-grid > *:nth-child(3) {
+  animation-delay:
+    120ms;
+}
+
+
+.dashboard-grid > *:nth-child(4),
+.market-summary-grid > *:nth-child(4) {
+  animation-delay:
+    160ms;
+}
+
+
+/* ----------------------------------------------------------
+   CHART CONTAINERS
+   ---------------------------------------------------------- */
+
+.recharts-responsive-container {
+  animation:
+    qs-fade-in
+    480ms
+    120ms
+    ease-out
+    both;
+}
+
+
+.recharts-dot,
+.recharts-active-dot {
+  transition:
+    r 140ms ease,
+    opacity 140ms ease;
+}
+
+
+/* ----------------------------------------------------------
+   MARKET TABLE
+   ---------------------------------------------------------- */
+
+.markets-table-card {
+  animation:
+    qs-fade-up
+    420ms
+    100ms
+    ease-out
+    both;
+}
+
+
+.markets-table tbody tr {
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+
+.markets-table tbody tr:hover {
+  background:
+    rgba(
+      108,
+      140,
+      255,
+      0.055
+    );
+}
+
+
+.quote-pill,
+.market-active-status,
+.market-available-status {
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+
+.markets-table tbody tr:hover
+.quote-pill {
+  transform:
+    scale(1.035);
+}
+
+
+/* ----------------------------------------------------------
+   BUTTON FEEDBACK
+   ---------------------------------------------------------- */
+
+button,
+.dashboard-link {
+  transition:
+    transform 150ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+
+button:not(:disabled):active,
+.dashboard-link:active {
+  transform:
+    scale(0.975);
+}
+
+
+/* ----------------------------------------------------------
+   INPUTS
+   ---------------------------------------------------------- */
+
+input,
+select {
+  transition:
+    border-color 170ms ease,
+    box-shadow 170ms ease,
+    background-color 170ms ease;
+}
+
+
+input:focus,
+select:focus {
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      108,
+      140,
+      255,
+      0.10
+    );
+}
+
+
+/* ----------------------------------------------------------
+   SETTINGS
+   ---------------------------------------------------------- */
+
+.settings-grid > * {
+  animation:
+    qs-fade-up
+    410ms
+    ease-out
+    both;
+}
+
+
+.settings-grid > *:nth-child(1) {
+  animation-delay:
+    40ms;
+}
+
+
+.settings-grid > *:nth-child(2) {
+  animation-delay:
+    90ms;
+}
+
+
+.settings-grid > *:nth-child(3) {
+  animation-delay:
+    140ms;
+}
+
+
+.settings-grid > *:nth-child(4) {
+  animation-delay:
+    190ms;
+}
+
+
+.preference-choice {
+  transition:
+    transform 180ms ease,
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+
+.preference-choice:hover {
+  transform:
+    translateY(-2px);
+}
+
+
+.preference-choice.active {
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      108,
+      140,
+      255,
+      0.08
+    );
+}
+
+
+/* ----------------------------------------------------------
+   LOADING STATES
+   ---------------------------------------------------------- */
+
+.loading-card {
+  position: relative;
+  overflow: hidden;
+}
+
+
+.loading-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(
+        255,
+        255,
+        255,
+        0.045
+      ) 50%,
+      transparent 80%
+    );
+
+  transform:
+    translateX(-100%);
+
+  animation:
+    qs-loading-shimmer
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes qs-loading-shimmer {
+  to {
+    transform:
+      translateX(100%);
+  }
+}
+
+
+/* ----------------------------------------------------------
+   ERROR / INFORMATION BANNERS
+   ---------------------------------------------------------- */
+
+.error-banner {
+  animation:
+    qs-fade-up
+    280ms
+    ease-out
+    both;
+}
+
+
+/* ----------------------------------------------------------
+   THEME TRANSITIONS
+   ---------------------------------------------------------- */
+
+body,
+.main-area,
+.sidebar,
+.app-toolbar {
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease;
+}
+
+
+/* ----------------------------------------------------------
+   ACCESSIBILITY
+   ---------------------------------------------------------- */
+
+/*
+   Respect the operating-system reduced-motion preference.
+*/
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior:
+      auto !important;
+
+    animation-duration:
+      0.001ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.001ms !important;
+  }
+
+}
