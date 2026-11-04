@@ -29,6 +29,31 @@ import * as XLSX from 'xlsx'
 type CellValue = string | number | boolean | Date | null
 type DataLayout = 'wide' | 'long'
 
+type FinancialDataType =
+  | 'price'
+  | 'decimal-return'
+  | 'percentage-return'
+
+type DataFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'irregular'
+
+interface DataIntelligence {
+  detectedType: FinancialDataType
+  confidence: 'high' | 'medium' | 'low'
+  frequency: DataFrequency
+  evidence: string[]
+}
+
+interface CompanyCoverage {
+  company: string
+  observations: number
+  totalDates: number
+  percentage: number
+}
+
 interface ImportedSheet {
   name: string
   headers: string[]
@@ -204,6 +229,263 @@ function heatColor(
   return `rgba(${red}, ${green}, ${blue}, 0.72)`
 }
 
+function medianValue(
+  values: number[],
+): number {
+  if (values.length === 0) {
+    return 0
+  }
+
+  const sorted =
+    [...values].sort(
+      (left, right) =>
+        left - right,
+    )
+
+  const middle =
+    Math.floor(
+      sorted.length / 2,
+    )
+
+  return sorted.length % 2 === 0
+    ? (
+        sorted[middle - 1] +
+        sorted[middle]
+      ) / 2
+    : sorted[middle]
+}
+
+function detectFrequency(
+  dates: string[],
+): DataFrequency {
+  const timestamps =
+    Array.from(
+      new Set(dates),
+    )
+      .map(value =>
+        new Date(value).getTime(),
+      )
+      .filter(value =>
+        Number.isFinite(value),
+      )
+      .sort((left, right) =>
+        left - right,
+      )
+
+  if (timestamps.length < 3) {
+    return 'irregular'
+  }
+
+  const gaps: number[] = []
+
+  for (
+    let index = 1;
+    index < timestamps.length;
+    index += 1
+  ) {
+    gaps.push(
+      (
+        timestamps[index] -
+        timestamps[index - 1]
+      ) /
+      86400000,
+    )
+  }
+
+  const gap =
+    medianValue(gaps)
+
+  if (gap <= 4) {
+    return 'daily'
+  }
+
+  if (gap <= 10) {
+    return 'weekly'
+  }
+
+  if (
+    gap >= 20 &&
+    gap <= 40
+  ) {
+    return 'monthly'
+  }
+
+  return 'irregular'
+}
+
+function detectFinancialDataType(
+  sheetName: string,
+  valueName: string,
+  values: number[],
+  rawValues: CellValue[],
+): Omit<DataIntelligence, 'frequency'> {
+  const combinedName =
+    `${sheetName} ${valueName}`
+      .trim()
+      .toLowerCase()
+
+  const evidence: string[] = []
+
+  const priceSignal =
+    [
+      'close',
+      'adjusted close',
+      'adj close',
+      'price',
+      'open',
+      'high',
+      'low',
+      'nav',
+    ].some(word =>
+      combinedName.includes(word),
+    )
+
+  const returnSignal =
+    [
+      'return',
+      'returns',
+      'pct',
+      'percentage',
+      'change',
+    ].some(word =>
+      combinedName.includes(word),
+    )
+
+  const percentageCells =
+    rawValues.filter(value =>
+      typeof value === 'string' &&
+      value.includes('%'),
+    ).length
+
+  const percentageShare =
+    rawValues.length === 0
+      ? 0
+      : percentageCells /
+        rawValues.length
+
+  const negativeShare =
+    values.length === 0
+      ? 0
+      : values.filter(value =>
+          value < 0,
+        ).length /
+        values.length
+
+  const medianAbsoluteValue =
+    medianValue(
+      values.map(value =>
+        Math.abs(value),
+      ),
+    )
+
+  if (priceSignal) {
+    evidence.push(
+      'The sheet or value name indicates price-level data.',
+    )
+  }
+
+  if (returnSignal) {
+    evidence.push(
+      'The sheet or value name contains return-related terminology.',
+    )
+  }
+
+  if (percentageShare >= 0.25) {
+    evidence.push(
+      'Many imported cells use percentage formatting.',
+    )
+  }
+
+  if (negativeShare >= 0.05) {
+    evidence.push(
+      'The data contains both positive and negative observations.',
+    )
+  }
+
+  if (
+    returnSignal &&
+    (
+      percentageShare >= 0.25 ||
+      medianAbsoluteValue > 1
+    )
+  ) {
+    return {
+      detectedType:
+        'percentage-return',
+      confidence:
+        percentageShare >= 0.5 ||
+        medianAbsoluteValue > 2
+          ? 'high'
+          : 'medium',
+      evidence,
+    }
+  }
+
+  if (
+    returnSignal ||
+    (
+      negativeShare >= 0.05 &&
+      medianAbsoluteValue <= 1
+    )
+  ) {
+    return {
+      detectedType:
+        'decimal-return',
+      confidence:
+        returnSignal &&
+        negativeShare >= 0.05
+          ? 'high'
+          : 'medium',
+      evidence,
+    }
+  }
+
+  return {
+    detectedType: 'price',
+    confidence:
+      priceSignal
+        ? 'high'
+        : 'low',
+    evidence:
+      evidence.length > 0
+        ? evidence
+        : [
+            'Values appear level-like. Confirm the interpretation before analysis.',
+          ],
+  }
+}
+
+function financialDataTypeLabel(
+  value: FinancialDataType,
+): string {
+  if (value === 'decimal-return') {
+    return 'Decimal returns'
+  }
+
+  if (value === 'percentage-return') {
+    return 'Percentage returns'
+  }
+
+  return 'Price / level data'
+}
+
+function frequencyLabel(
+  value: DataFrequency,
+): string {
+  if (value === 'daily') {
+    return 'Daily'
+  }
+
+  if (value === 'weekly') {
+    return 'Weekly'
+  }
+
+  if (value === 'monthly') {
+    return 'Monthly'
+  }
+
+  return 'Irregular'
+}
 function createHistogram(
   values: number[],
   binCount = 16,
@@ -296,6 +578,8 @@ function ImportPage() {
   const [endDate, setEndDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dataTypeOverride, setDataTypeOverride] =
+    useState<FinancialDataType | null>(null)
 
   const sheet = useMemo(
     () => inspection?.sheets.find(item => item.name === sheetName) ?? null,
@@ -327,6 +611,7 @@ function ImportPage() {
     setValueColumn(sheet.suggestedValueColumn)
     setStartDate('')
     setEndDate('')
+    setDataTypeOverride(null)
   }, [sheet])
 
   const indexes = useMemo(
@@ -420,27 +705,121 @@ function ImportPage() {
       }))
   }, [normalized, companies])
 
+  const dataIntelligence =
+    useMemo<DataIntelligence>(
+      () => {
+        const values =
+          normalized.map(row =>
+            row.value,
+          )
+
+        const rawValues =
+          sheet?.rows.flat() ?? []
+
+        const detection =
+          detectFinancialDataType(
+            sheet?.name ?? '',
+            valueColumn,
+            values,
+            rawValues,
+          )
+
+        return {
+          ...detection,
+          frequency:
+            detectFrequency(
+              dateMatrix.map(row =>
+                row.date,
+              ),
+            ),
+        }
+      },
+      [
+        normalized,
+        sheet,
+        valueColumn,
+        dateMatrix,
+      ],
+    )
+
+  const selectedDataType =
+    dataTypeOverride ??
+    dataIntelligence.detectedType
+
+  const companyCoverage =
+    useMemo<CompanyCoverage[]>(
+      () =>
+        companies.map(company => {
+          const observations =
+            dateMatrix.filter(row =>
+              row.values[company] !== null,
+            ).length
+
+          return {
+            company,
+            observations,
+            totalDates: dateMatrix.length,
+            percentage:
+              dateMatrix.length === 0
+                ? 0
+                : observations /
+                  dateMatrix.length *
+                  100,
+          }
+        }),
+      [companies, dateMatrix],
+    )
   const covariance = useMemo<CovarianceResult | null>(() => {
     if (companies.length < 2 || dateMatrix.length < 3) return null
 
     const returnRows: DateMatrixRow[] = []
-    for (let index = 1; index < dateMatrix.length; index += 1) {
-      const previous = dateMatrix[index - 1]
-      const current = dateMatrix[index]
-      const values: Record<string, number | null> = {}
-      let complete = true
 
-      for (const company of companies) {
-        const prior = previous.values[company]
-        const latest = current.values[company]
-        if (prior === null || latest === null || prior === 0) {
-          complete = false
-          break
+    if (selectedDataType === 'price') {
+      for (let index = 1; index < dateMatrix.length; index += 1) {
+        const previous = dateMatrix[index - 1]
+        const current = dateMatrix[index]
+        const values: Record<string, number | null> = {}
+        let complete = true
+
+        for (const company of companies) {
+          const prior = previous.values[company]
+          const latest = current.values[company]
+
+          if (prior === null || latest === null || prior === 0) {
+            complete = false
+            break
+          }
+
+          values[company] = latest / prior - 1
         }
-        values[company] = latest / prior - 1
-      }
 
-      if (complete) returnRows.push({ date: current.date, values })
+        if (complete) {
+          returnRows.push({ date: current.date, values })
+        }
+      }
+    } else {
+      for (const row of dateMatrix) {
+        const values: Record<string, number | null> = {}
+        let complete = true
+
+        for (const company of companies) {
+          const importedValue = row.values[company]
+
+          if (importedValue === null) {
+            complete = false
+            break
+          }
+
+          values[company] =
+            selectedDataType === 'percentage-return'
+              ? importedValue / 100
+              : importedValue
+        }
+
+        if (complete) {
+          returnRows.push({ date: row.date, values })
+        }
+      }
     }
 
     if (returnRows.length < 2) return null
@@ -509,7 +888,11 @@ function ImportPage() {
       volatilities,
       meanReturns: means,
     }
-  }, [companies, dateMatrix])
+  }, [
+    companies,
+    dateMatrix,
+    selectedDataType,
+  ])
 
   function covarianceColor(
     value: number,
@@ -697,6 +1080,105 @@ function ImportPage() {
 
           {sheet && (
             <>
+              <section className="import-intelligence-card">
+                <header>
+                  <div>
+                    <span className="import-step-label">
+                      Dataset intelligence
+                    </span>
+                    <h2>Detected financial data</h2>
+                    <p>
+                      Confirm the interpretation before covariance,
+                      correlation, and risk calculations are performed.
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      `import-confidence import-confidence-${dataIntelligence.confidence}`
+                    }
+                  >
+                    {dataIntelligence.confidence} confidence
+                  </span>
+                </header>
+
+                <div className="import-intelligence-grid">
+                  <label>
+                    Analyze imported values as
+                    <select
+                      value={selectedDataType}
+                      onChange={event =>
+                        setDataTypeOverride(
+                          event.target.value as FinancialDataType
+                        )
+                      }
+                    >
+                      <option value="price">Price / level data</option>
+                      <option value="decimal-return">Decimal returns</option>
+                      <option value="percentage-return">Percentage returns</option>
+                    </select>
+                  </label>
+
+                  <div>
+                    <span>Detected type</span>
+                    <strong>
+                      {financialDataTypeLabel(dataIntelligence.detectedType)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Frequency</span>
+                    <strong>
+                      {frequencyLabel(dataIntelligence.frequency)}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Companies</span>
+                    <strong>{companies.length}</strong>
+                  </div>
+
+                  <div>
+                    <span>Dates</span>
+                    <strong>{dateMatrix.length}</strong>
+                  </div>
+
+                  <div>
+                    <span>Common observations</span>
+                    <strong>{covariance?.returns.length ?? 0}</strong>
+                  </div>
+                </div>
+
+                <div className="import-evidence-list">
+                  {dataIntelligence.evidence.map(evidence => (
+                    <span key={evidence}>{evidence}</span>
+                  ))}
+                </div>
+
+                <div className="import-coverage-list">
+                  {companyCoverage.map(item => (
+                    <div key={item.company}>
+                      <span>{item.company}</span>
+                      <div>
+                        <i
+                          style={{
+                            width: `${Math.min(item.percentage, 100)}%`,
+                          }}
+                        />
+                      </div>
+                      <strong>{item.percentage.toFixed(1)}%</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <nav className="import-analysis-navigation">
+                <a href="#import-data">Data</a>
+                <a href="#import-covariance">Covariance</a>
+                <a href="#import-correlation">Correlation</a>
+                <a href="#import-risk">Risk</a>
+                <a href="#import-distributions">Distributions</a>
+              </nav>
+
               <section className="import-mapping-grid">
                 <article className="import-panel">
                   <header><Table2 size={18} /><div><h2>Structure</h2><p>Confirm how companies are organized.</p></div></header>
@@ -727,7 +1209,7 @@ function ImportPage() {
                 </article>
               </section>
 
-              <section className="import-preview-card">
+              <section id="import-data" className="import-preview-card">
                 <header>
                   <div>
                     <h2>Complete date matrix</h2>
@@ -767,7 +1249,7 @@ function ImportPage() {
               <section className="import-preview-card import-covariance-card">
                 <header>
                   <div>
-                    <h2>Return covariance heatmap</h2>
+                    <h2 id="import-covariance">Return covariance heatmap</h2>
                     <p>Sample covariance calculated from complete, date-aligned simple returns.</p>
                   </div>
                   <strong>{covariance?.returns.length ?? 0} common return periods</strong>
@@ -813,7 +1295,7 @@ function ImportPage() {
               <section className="import-preview-card import-covariance-card">
                 <header>
                   <div>
-                    <h2>Correlation heatmap</h2>
+                    <h2 id="import-correlation">Correlation heatmap</h2>
                     <p>Lowest observed correlation is red. Highest observed correlation is green.</p>
                   </div>
                   <strong>-1 to +1</strong>
@@ -875,7 +1357,7 @@ function ImportPage() {
               <section className="import-preview-card import-covariance-card">
                 <header>
                   <div>
-                    <h2>Volatility metrics</h2>
+                    <h2 id="import-risk">Volatility metrics</h2>
                     <p>Mean, standard deviation, and variance of aligned simple returns.</p>
                   </div>
                   <strong>{covariance?.returns.length ?? 0} periods</strong>
@@ -915,7 +1397,7 @@ function ImportPage() {
               <section className="import-preview-card import-covariance-card">
                 <header>
                   <div>
-                    <h2>Return distributions</h2>
+                    <h2 id="import-distributions">Return distributions</h2>
                     <p>Histograms of the aligned returns used by the covariance analysis.</p>
                   </div>
                   <strong>{distributions.length} companies</strong>
