@@ -1,5 +1,7 @@
-﻿using System.Globalization;
+using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using QuantStat.Core.Abstractions;
 using QuantStat.Core.Markets.Models;
 
@@ -11,13 +13,25 @@ public sealed class AlpacaMarketDataProvider :
     private const int MaximumPages =
         25;
 
+    private static readonly
+        ConcurrentDictionary<string, SemaphoreSlim>
+        CacheLocks =
+            new(
+                StringComparer.Ordinal);
+
     private readonly HttpClient _httpClient;
 
+    private readonly IMemoryCache _cache;
+
     public AlpacaMarketDataProvider(
-        HttpClient httpClient)
+        HttpClient httpClient,
+        IMemoryCache cache)
     {
         _httpClient =
             httpClient;
+
+        _cache =
+            cache;
     }
 
     public string Name =>
@@ -107,6 +121,83 @@ public sealed class AlpacaMarketDataProvider :
             NormalizeSymbol(
                 symbol);
 
+        string cacheKey =
+            string.Create(
+                CultureInfo.InvariantCulture,
+                $"alpaca:candles:{normalizedSymbol}:{intervalMinutes}:{includeIncompleteCandle}");
+
+        if (
+            _cache.TryGetValue(
+                cacheKey,
+                out IReadOnlyList<MarketCandle>? cachedCandles) &&
+            cachedCandles is not null)
+        {
+            return cachedCandles;
+        }
+
+        SemaphoreSlim cacheLock =
+            CacheLocks.GetOrAdd(
+                cacheKey,
+                _ =>
+                    new SemaphoreSlim(
+                        1,
+                        1));
+
+        await cacheLock.WaitAsync(
+            cancellationToken);
+
+        try
+        {
+            if (
+                _cache.TryGetValue(
+                    cacheKey,
+                    out cachedCandles) &&
+                cachedCandles is not null)
+            {
+                return cachedCandles;
+            }
+
+            IReadOnlyList<MarketCandle> candles =
+                await LoadCandlesAsync(
+                    normalizedSymbol,
+                    intervalMinutes,
+                    includeIncompleteCandle,
+                    cancellationToken);
+
+            TimeSpan cacheDuration =
+                CacheDuration(
+                    intervalMinutes);
+
+            _cache.Set(
+                cacheKey,
+                candles,
+                new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow =
+                        cacheDuration,
+
+                    Size =
+                        Math.Max(
+                            1,
+                            candles.Count)
+                });
+
+            return candles;
+        }
+        finally
+        {
+            cacheLock.Release();
+        }
+    }
+
+
+    private async Task<IReadOnlyList<MarketCandle>>
+        LoadCandlesAsync(
+            string normalizedSymbol,
+            int intervalMinutes,
+            bool includeIncompleteCandle,
+            CancellationToken cancellationToken)
+    {
         string timeframe =
             ToAlpacaTimeframe(
                 intervalMinutes);
@@ -156,6 +247,25 @@ public sealed class AlpacaMarketDataProvider :
             .ToArray();
     }
 
+
+    private static TimeSpan CacheDuration(
+        int intervalMinutes)
+    {
+        return intervalMinutes switch
+        {
+            <= 5 =>
+                TimeSpan.FromSeconds(30),
+
+            <= 60 =>
+                TimeSpan.FromMinutes(1),
+
+            <= 240 =>
+                TimeSpan.FromMinutes(2),
+
+            _ =>
+                TimeSpan.FromMinutes(5)
+        };
+    }
 
     private async Task<IReadOnlyList<MarketCandle>>
         GetStockCandlesAsync(

@@ -1,4 +1,4 @@
-﻿using QuantStat.Api.Providers.Alpaca;
+using QuantStat.Api.Providers.Alpaca;
 using QuantStat.Core.Abstractions;
 using QuantStat.Core.Dashboard;
 using QuantStat.Core.Markets.Models;
@@ -13,6 +13,14 @@ string port =
 
 builder.WebHost.UseUrls(
     $"http://0.0.0.0:{port}");
+
+
+builder.Services.AddMemoryCache(
+    options =>
+    {
+        options.SizeLimit =
+            250000;
+    });
 
 
 builder.Services.AddHttpClient<
