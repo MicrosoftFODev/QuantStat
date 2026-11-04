@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
@@ -23,208 +23,101 @@ public sealed class AlpacaMarketDataProvider :
 
     private readonly IMemoryCache _cache;
 
+    private readonly AlpacaAssetsClient
+        _assetsClient;
+
     public AlpacaMarketDataProvider(
         HttpClient httpClient,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        AlpacaAssetsClient assetsClient)
     {
         _httpClient =
             httpClient;
 
         _cache =
             cache;
+
+        _assetsClient =
+            assetsClient;
     }
 
     public string Name =>
         "Alpaca";
 
 
-    public Task<MarketMetadata> GetMetadataAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<MarketMetadata>
+        GetMetadataAsync(
+            CancellationToken cancellationToken =
+                default)
     {
-        IReadOnlyList<MarketInstrument> markets =
-        [
-            CreateStock(
-                "AAPL",
-                "Apple Inc."),
+        IReadOnlyList<MarketInstrument>
+            stocks;
 
-            CreateStock(
-                "MSFT",
-                "Microsoft Corporation"),
+        try
+        {
+            IReadOnlyList<AlpacaAsset>
+                assets =
+                    await _assetsClient
+                        .GetActiveStocksAsync(
+                            cancellationToken);
 
-            CreateStock(
-                "NVDA",
-                "NVIDIA Corporation"),
+            stocks =
+                assets
+                    .Select(
+                        asset =>
+                            CreateStock(
+                                asset.Symbol,
+                                asset.Name))
+                    .ToArray();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            stocks =
+                CreateFallbackStocks();
+        }
 
-            CreateStock(
-                "AMZN",
-                "Amazon.com Inc."),
+        IReadOnlyList<MarketInstrument>
+            markets =
+            [
+                .. stocks,
 
-            CreateStock(
-                "GOOGL",
-                "Alphabet Inc."),
+                CreateCrypto(
+                    "BTC/USD"),
 
-            CreateStock(
-                "META",
-                "Meta Platforms Inc."),
+                CreateCrypto(
+                    "ETH/USD"),
 
-            CreateStock(
-                "TSLA",
-                "Tesla Inc."),
+                CreateCrypto(
+                    "SOL/USD"),
 
-            CreateStock(
-                "AMD",
-                "Advanced Micro Devices Inc."),
+                CreateCrypto(
+                    "AVAX/USD"),
 
-            CreateStock(
-                "NFLX",
-                "Netflix Inc."),
+                CreateCrypto(
+                    "LINK/USD")
+            ];
 
-            CreateStock(
-                "AVGO",
-                "Broadcom Inc."),
+        return new MarketMetadata
+        {
+            Markets =
+                markets,
 
-            CreateStock(
-                "ORCL",
-                "Oracle Corporation"),
+            Intervals =
+                CreateIntervals(),
 
-            CreateStock(
-                "CRM",
-                "Salesforce Inc."),
+            Periods =
+                CreatePeriods(),
 
-            CreateStock(
-                "ADBE",
-                "Adobe Inc."),
-
-            CreateStock(
-                "INTC",
-                "Intel Corporation"),
-
-            CreateStock(
-                "JPM",
-                "JPMorgan Chase & Co."),
-
-            CreateStock(
-                "BAC",
-                "Bank of America Corporation"),
-
-            CreateStock(
-                "GS",
-                "Goldman Sachs Group Inc."),
-
-            CreateStock(
-                "V",
-                "Visa Inc."),
-
-            CreateStock(
-                "MA",
-                "Mastercard Incorporated"),
-
-            CreateStock(
-                "BRK.B",
-                "Berkshire Hathaway Inc."),
-
-            CreateStock(
-                "JNJ",
-                "Johnson & Johnson"),
-
-            CreateStock(
-                "LLY",
-                "Eli Lilly and Company"),
-
-            CreateStock(
-                "UNH",
-                "UnitedHealth Group Incorporated"),
-
-            CreateStock(
-                "WMT",
-                "Walmart Inc."),
-
-            CreateStock(
-                "COST",
-                "Costco Wholesale Corporation"),
-
-            CreateStock(
-                "KO",
-                "Coca-Cola Company"),
-
-            CreateStock(
-                "PEP",
-                "PepsiCo Inc."),
-
-            CreateStock(
-                "XOM",
-                "Exxon Mobil Corporation"),
-
-            CreateStock(
-                "CVX",
-                "Chevron Corporation"),
-
-            CreateStock(
-                "DIS",
-                "Walt Disney Company"),
-
-            CreateStock(
-                "UBER",
-                "Uber Technologies Inc."),
-
-            CreateStock(
-                "PYPL",
-                "PayPal Holdings Inc."),
-
-            CreateStock(
-                "SPY",
-                "SPDR S&P 500 ETF Trust"),
-
-            CreateStock(
-                "QQQ",
-                "Invesco QQQ Trust"),
-
-            CreateStock(
-                "DIA",
-                "SPDR Dow Jones Industrial Average ETF Trust"),
-
-            CreateStock(
-                "IWM",
-                "iShares Russell 2000 ETF"),
-
-            CreateCrypto(
-                "BTC/USD"),
-
-            CreateCrypto(
-                "ETH/USD"),
-
-            CreateCrypto(
-                "SOL/USD"),
-
-            CreateCrypto(
-                "AVAX/USD"),
-
-            CreateCrypto(
-                "LINK/USD")
-        ];
-
-        MarketMetadata metadata =
-            new()
-            {
-                Markets =
-                    markets,
-
-                Intervals =
-                    CreateIntervals(),
-
-                Periods =
-                    CreatePeriods(),
-
-                QuoteCurrencies =
-                [
-                    "USD"
-                ]
-            };
-
-        return Task.FromResult(
-            metadata);
+            QuoteCurrencies =
+            [
+                "USD"
+            ]
+        };
     }
-
 
     public async Task<IReadOnlyList<MarketCandle>>
         GetCandlesAsync(
@@ -874,6 +767,42 @@ public sealed class AlpacaMarketDataProvider :
     }
 
 
+    private static IReadOnlyList<
+        MarketInstrument>
+        CreateFallbackStocks()
+    {
+        return
+        [
+            CreateStock(
+                "AAPL",
+                "Apple Inc."),
+
+            CreateStock(
+                "MSFT",
+                "Microsoft Corporation"),
+
+            CreateStock(
+                "NVDA",
+                "NVIDIA Corporation"),
+
+            CreateStock(
+                "AMZN",
+                "Amazon.com Inc."),
+
+            CreateStock(
+                "GOOGL",
+                "Alphabet Inc."),
+
+            CreateStock(
+                "META",
+                "Meta Platforms Inc."),
+
+            CreateStock(
+                "TSLA",
+                "Tesla Inc.")
+        ];
+    }
+
     private static MarketInstrument CreateStock(
         string symbol,
         string displayName)
@@ -1001,3 +930,6 @@ public sealed class AlpacaMarketDataProvider :
         ];
     }
 }
+
+
+

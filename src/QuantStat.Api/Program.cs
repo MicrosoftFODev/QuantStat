@@ -1,4 +1,4 @@
-using QuantStat.Api.Providers.Alpaca;
+﻿using QuantStat.Api.Providers.Alpaca;
 using QuantStat.Core.Abstractions;
 using QuantStat.Core.Dashboard;
 using QuantStat.Core.Markets.Models;
@@ -69,6 +69,45 @@ builder.Services.AddHttpClient<
             secretKey);
     });
 
+
+builder.Services.AddHttpClient<
+    AlpacaAssetsClient>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri(
+                "https://paper-api.alpaca.markets");
+
+        client.Timeout =
+            TimeSpan.FromSeconds(60);
+
+        client.DefaultRequestHeaders
+            .Accept
+            .ParseAdd(
+                "application/json");
+
+        string apiKey =
+            Environment.GetEnvironmentVariable(
+                "ALPACA_API_KEY")
+            ??
+            throw new InvalidOperationException(
+                "ALPACA_API_KEY is missing.");
+
+        string secretKey =
+            Environment.GetEnvironmentVariable(
+                "ALPACA_SECRET_KEY")
+            ??
+            throw new InvalidOperationException(
+                "ALPACA_SECRET_KEY is missing.");
+
+        client.DefaultRequestHeaders.Add(
+            "APCA-API-KEY-ID",
+            apiKey);
+
+        client.DefaultRequestHeaders.Add(
+            "APCA-API-SECRET-KEY",
+            secretKey);
+    });
 
 builder.Services.AddScoped<
     StatisticsService>();
@@ -769,3 +808,4 @@ static IResult ProviderProblem(
         statusCode:
             StatusCodes.Status502BadGateway);
 }
+
