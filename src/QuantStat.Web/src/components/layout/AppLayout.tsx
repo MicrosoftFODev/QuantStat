@@ -5,7 +5,6 @@ import {
   ChartNoAxesCombined,
   Database,
   FlaskConical,
-  Gauge,
   LogOut,
   Moon,
   Settings,
@@ -28,11 +27,6 @@ import {
 
 
 const navigation = [
-  {
-    label: 'dashboard',
-    path: '/dashboard',
-    icon: Gauge,
-  },
   {
     label: 'markets',
     path: '/markets',
