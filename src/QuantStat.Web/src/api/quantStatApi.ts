@@ -1,39 +1,46 @@
-﻿import type {
+import type {
   DashboardResult,
   MarketMetadata,
 } from '../models/market'
+
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   'http://localhost:5094'
 
-export type MarketProvider =
-  | 'kraken'
-  | 'coinbase'
 
-export function currentProvider(): MarketProvider {
+export type AssetClass =
+  | 'stock'
+  | 'crypto'
+
+
+export function currentAssetClass():
+  AssetClass {
   return localStorage.getItem(
-    'quantstat-provider',
-  ) === 'coinbase'
-    ? 'coinbase'
-    : 'kraken'
+    'quantstat-asset-class',
+  ) === 'crypto'
+    ? 'crypto'
+    : 'stock'
 }
 
-export function providerLabel(
-  provider: MarketProvider,
+
+export function assetClassLabel(
+  assetClass: AssetClass,
 ): string {
-  return provider === 'coinbase'
-    ? 'Coinbase'
-    : 'Kraken'
+  return assetClass === 'crypto'
+    ? 'Crypto'
+    : 'Stocks'
 }
 
-export function defaultSymbolForProvider(
-  provider: MarketProvider,
+
+export function defaultSymbolForAssetClass(
+  assetClass: AssetClass,
 ): string {
-  return provider === 'coinbase'
-    ? 'ETH-USD'
-    : 'ETHUSD'
+  return assetClass === 'crypto'
+    ? 'BTC/USD'
+    : 'AAPL'
 }
+
 
 async function request<T>(
   path: string,
@@ -45,7 +52,8 @@ async function request<T>(
       {
         signal,
         headers: {
-          Accept: 'application/json',
+          Accept:
+            'application/json',
         },
       },
     )
@@ -65,23 +73,27 @@ async function request<T>(
         message
     }
     catch {
-      // Keep default.
+      // Keep default message.
     }
 
-    throw new Error(message)
+    throw new Error(
+      message,
+    )
   }
 
   return response.json() as Promise<T>
 }
 
+
 export function getMarkets(
   signal?: AbortSignal,
-  provider: MarketProvider =
-    currentProvider(),
+  assetClass:
+    AssetClass =
+      currentAssetClass(),
 ): Promise<MarketMetadata> {
   const query =
     new URLSearchParams({
-      provider,
+      assetClass,
     })
 
   return request<MarketMetadata>(
@@ -90,20 +102,24 @@ export function getMarkets(
   )
 }
 
+
 export function getDashboard(
   symbol: string,
   interval: number,
   periodDays: number,
   signal?: AbortSignal,
-  provider: MarketProvider =
-    currentProvider(),
+  assetClass:
+    AssetClass =
+      currentAssetClass(),
 ): Promise<DashboardResult> {
   const query =
     new URLSearchParams({
-      provider,
+      assetClass,
       symbol,
-      interval: interval.toString(),
-      periodDays: periodDays.toString(),
+      interval:
+        interval.toString(),
+      periodDays:
+        periodDays.toString(),
     })
 
   return request<DashboardResult>(

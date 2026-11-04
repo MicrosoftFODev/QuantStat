@@ -1,8 +1,24 @@
-import SettingsPage from './features/settings/SettingsPage'
-import DictionaryPage from './features/dictionary/DictionaryPage'
-import MarketsPage from './features/markets/MarketsPage'
+﻿import SettingsPage
+  from './features/settings/SettingsPage'
 
-import ChartsPage from './features/charts/ChartsPage'
+import DictionaryPage
+  from './features/dictionary/DictionaryPage'
+
+import MarketsPage
+  from './features/markets/MarketsPage'
+
+import ChartsPage
+  from './features/charts/ChartsPage'
+
+import StatisticsPage
+  from './features/statistics/StatisticsPage'
+
+import PlaceholderPage
+  from './pages/PlaceholderPage'
+
+import AppLayout
+  from './components/layout/AppLayout'
+
 import './styles/app.css'
 
 import {
@@ -10,18 +26,6 @@ import {
   Route,
   Routes,
 } from 'react-router-dom'
-
-import AppLayout
-  from './components/layout/AppLayout'
-
-import DashboardPage
-  from './features/dashboard/DashboardPage'
-
-import StatisticsPage
-  from './features/statistics/StatisticsPage'
-
-import PlaceholderPage
-  from './pages/PlaceholderPage'
 
 
 function App() {
@@ -36,7 +40,7 @@ function App() {
           index
           element={
             <Navigate
-              to="/dashboard"
+              to="/markets"
               replace
             />
           }
@@ -46,7 +50,10 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <DashboardPage />
+            <Navigate
+              to="/markets"
+              replace
+            />
           }
         />
 
@@ -106,7 +113,7 @@ function App() {
           path="*"
           element={
             <Navigate
-              to="/dashboard"
+              to="/markets"
               replace
             />
           }
@@ -119,13 +126,4 @@ function App() {
 }
 
 
-/*
- * Temporary wrapper.
- *
- * The next refactor will move market
- * selection into shared application
- * state so Dashboard, Statistics,
- * Charts and Forecast all use the same
- * selected market.
- */
 export default App

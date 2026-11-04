@@ -1,33 +1,38 @@
 ﻿import {
-  currentProvider,
+  currentAssetClass,
 } from '../../api/quantStatApi'
 
 import type {
-  MarketProvider,
+  AssetClass,
 } from '../../api/quantStatApi'
 
 import type {
   StatisticsResponse,
 } from './statisticsModels'
 
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ??
   'http://localhost:5094'
+
 
 export async function getStatistics(
   symbol: string,
   interval: number,
   periodDays: number,
   signal?: AbortSignal,
-  provider: MarketProvider =
-    currentProvider(),
+  assetClass:
+    AssetClass =
+      currentAssetClass(),
 ): Promise<StatisticsResponse> {
   const query =
     new URLSearchParams({
-      provider,
+      assetClass,
       symbol,
-      interval: interval.toString(),
-      periodDays: periodDays.toString(),
+      interval:
+        interval.toString(),
+      periodDays:
+        periodDays.toString(),
     })
 
   const response =
@@ -36,7 +41,8 @@ export async function getStatistics(
       {
         signal,
         headers: {
-          Accept: 'application/json',
+          Accept:
+            'application/json',
         },
       },
     )
@@ -56,10 +62,12 @@ export async function getStatistics(
         message
     }
     catch {
-      // Keep default.
+      // Keep default message.
     }
 
-    throw new Error(message)
+    throw new Error(
+      message,
+    )
   }
 
   return response.json()

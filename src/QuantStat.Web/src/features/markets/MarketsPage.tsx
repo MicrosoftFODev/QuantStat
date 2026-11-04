@@ -4,11 +4,11 @@ import {
 
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   ArrowUpDown,
   CheckCircle2,
-  Database,
+  ChevronDown,
+  ChevronUp,
   RefreshCw,
   Search,
   Star,
@@ -21,21 +21,31 @@ import {
 } from 'react'
 
 import {
-  useNavigate,
-} from 'react-router-dom'
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 
 import {
-  currentProvider,
-  defaultSymbolForProvider,
+  assetClassLabel,
+  currentAssetClass,
+  defaultSymbolForAssetClass,
+  getDashboard,
   getMarkets,
-  providerLabel,
 } from '../../api/quantStatApi'
 
 import type {
-  MarketProvider,
+  AssetClass,
 } from '../../api/quantStatApi'
 
 import type {
+  DashboardResult,
   MarketInstrument,
   MarketMetadata,
 } from '../../models/market'
@@ -50,8 +60,6 @@ type SortKey =
   | 'displayName'
   | 'symbol'
   | 'baseAsset'
-  | 'quoteAsset'
-  | 'provider'
 
 
 type SortDirection =
@@ -60,13 +68,43 @@ type SortDirection =
 
 
 interface WatchlistItem {
-  provider: MarketProvider
+  assetClass: AssetClass
   symbol: string
 }
 
 
 const WATCHLIST_KEY =
-  'quantstat-market-watchlist'
+  'quantstat-market-watchlist-v2'
+
+
+function formatPercent(
+  value: number,
+): string {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+
+function shortDate(
+  value: string,
+): string {
+  return new Date(
+    value,
+  ).toLocaleDateString(
+    undefined,
+    {
+      month: 'short',
+      day: 'numeric',
+    },
+  )
+}
+
+
+function watchlistId(
+  assetClass: AssetClass,
+  symbol: string,
+): string {
+  return `${assetClass}:${symbol}`
+}
 
 
 function readWatchlist():
@@ -92,10 +130,10 @@ function readWatchlist():
       item =>
         item &&
         (
-          item.provider ===
-            'kraken' ||
-          item.provider ===
-            'coinbase'
+          item.assetClass ===
+            'stock' ||
+          item.assetClass ===
+            'crypto'
         ) &&
         typeof item.symbol ===
           'string',
@@ -107,30 +145,19 @@ function readWatchlist():
 }
 
 
-function watchlistId(
-  provider: MarketProvider,
-  symbol: string,
-): string {
-  return `${provider}:${symbol}`
-}
-
-
 function MarketsPage() {
-  const navigate =
-    useNavigate()
-
   const {
     preferences,
   } =
     usePreferences()
 
   const [
-    provider,
-    setProvider,
+    assetClass,
+    setAssetClass,
   ] =
-    useState<MarketProvider>(
+    useState<AssetClass>(
       () =>
-        currentProvider(),
+        currentAssetClass(),
     )
 
   const [
@@ -142,18 +169,81 @@ function MarketsPage() {
     )
 
   const [
+    dashboard,
+    setDashboard,
+  ] =
+    useState<DashboardResult | null>(
+      null,
+    )
+
+  const [
+    symbol,
+    setSymbol,
+  ] =
+    useState(
+      () => {
+        const storedAssetClass =
+          currentAssetClass()
+
+        const storedSymbol =
+          localStorage.getItem(
+            'quantstat-symbol',
+          )
+
+        if (
+          storedAssetClass ===
+            'stock' &&
+          storedSymbol?.includes('/')
+        ) {
+          return 'AAPL'
+        }
+
+        if (
+          storedAssetClass ===
+            'crypto' &&
+          !storedSymbol?.includes('/')
+        ) {
+          return 'BTC/USD'
+        }
+
+        return storedSymbol ??
+          defaultSymbolForAssetClass(
+            storedAssetClass,
+          )
+      },
+    )
+
+  const [
+    interval,
+    setInterval,
+  ] =
+    useState(
+      () =>
+        Number(
+          localStorage.getItem(
+            'quantstat-interval',
+          ) ?? 1440,
+        ),
+    )
+
+  const [
+    periodDays,
+    setPeriodDays,
+  ] =
+    useState(
+      () =>
+        Number(
+          localStorage.getItem(
+            'quantstat-period-days',
+          ) ?? 365,
+        ),
+    )
+
+  const [
     search,
     setSearch,
   ] =
     useState('')
-
-  const [
-    selectedQuote,
-    setSelectedQuote,
-  ] =
-    useState<string>(
-      preferences.currency,
-    )
 
   const [
     view,
@@ -180,8 +270,20 @@ function MarketsPage() {
     )
 
   const [
-    loading,
-    setLoading,
+    browserOpen,
+    setBrowserOpen,
+  ] =
+    useState(false)
+
+  const [
+    loadingMetadata,
+    setLoadingMetadata,
+  ] =
+    useState(true)
+
+  const [
+    loadingDashboard,
+    setLoadingDashboard,
   ] =
     useState(true)
 
@@ -209,16 +311,27 @@ function MarketsPage() {
     )
 
 
-  const selectedSymbol =
-    localStorage.getItem(
-      'quantstat-symbol',
-    ) ??
-    defaultSymbolForProvider(
-      provider,
+  useEffect(() => {
+    localStorage.setItem(
+      'quantstat-asset-class',
+      assetClass,
     )
 
+    localStorage.setItem(
+      'quantstat-symbol',
+      symbol,
+    )
 
-  useEffect(() => {
+    localStorage.setItem(
+      'quantstat-interval',
+      interval.toString(),
+    )
+
+    localStorage.setItem(
+      'quantstat-period-days',
+      periodDays.toString(),
+    )
+
     localStorage.setItem(
       WATCHLIST_KEY,
       JSON.stringify(
@@ -226,6 +339,10 @@ function MarketsPage() {
       ),
     )
   }, [
+    assetClass,
+    symbol,
+    interval,
+    periodDays,
     watchlist,
   ])
 
@@ -234,27 +351,67 @@ function MarketsPage() {
     const controller =
       new AbortController()
 
-    setLoading(true)
+    setLoadingMetadata(true)
     setError(null)
 
     getMarkets(
       controller.signal,
-      provider,
+      assetClass,
     )
       .then(result => {
         setMetadata(result)
 
-        const preferredQuoteExists =
-          result.quoteCurrencies
-            .includes(
-              preferences.currency,
+        const symbolIsValid =
+          result.markets.some(
+            market =>
+              market.symbol ===
+              symbol,
+          )
+
+        if (
+          !symbolIsValid &&
+          result.markets.length > 0
+        ) {
+          const preferredSymbol =
+            defaultSymbolForAssetClass(
+              assetClass,
             )
 
-        setSelectedQuote(
-          preferredQuoteExists
-            ? preferences.currency
-            : 'all',
-        )
+          const preferredMarket =
+            result.markets.find(
+              market =>
+                market.symbol ===
+                preferredSymbol,
+            )
+
+          setSymbol(
+            preferredMarket?.symbol ??
+            result.markets[0].symbol,
+          )
+        }
+
+        const intervalIsValid =
+          result.intervals.some(
+            item =>
+              item.minutes ===
+              interval,
+          )
+
+        if (
+          !intervalIsValid &&
+          result.intervals.length > 0
+        ) {
+          const defaultInterval =
+            result.intervals.find(
+              item =>
+                item.isDefault,
+            ) ??
+            result.intervals[0]
+
+          setInterval(
+            defaultInterval.minutes,
+          )
+        }
       })
       .catch(
         (reason: unknown) => {
@@ -278,20 +435,105 @@ function MarketsPage() {
       )
       .finally(() => {
         if (
-          !controller.signal
-            .aborted
+          !controller.signal.aborted
         ) {
-          setLoading(false)
+          setLoadingMetadata(false)
         }
       })
 
     return () =>
       controller.abort()
   }, [
-    provider,
+    assetClass,
     refreshKey,
-    preferences.currency,
   ])
+
+
+  useEffect(() => {
+    const controller =
+      new AbortController()
+
+    setLoadingDashboard(true)
+    setError(null)
+
+    getDashboard(
+      symbol,
+      interval,
+      periodDays,
+      controller.signal,
+      assetClass,
+    )
+      .then(setDashboard)
+      .catch(
+        (reason: unknown) => {
+          if (
+            reason instanceof
+              DOMException &&
+            reason.name ===
+              'AbortError'
+          ) {
+            return
+          }
+
+          setDashboard(null)
+
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : 'Market analysis could not be loaded.',
+          )
+        },
+      )
+      .finally(() => {
+        if (
+          !controller.signal.aborted
+        ) {
+          setLoadingDashboard(false)
+        }
+      })
+
+    return () =>
+      controller.abort()
+  }, [
+    assetClass,
+    symbol,
+    interval,
+    periodDays,
+    refreshKey,
+  ])
+
+
+  const selectedMarket =
+    metadata?.markets.find(
+      market =>
+        market.symbol ===
+        symbol,
+    )
+
+
+  const currency =
+    selectedMarket?.quoteAsset ??
+    preferences.currency ??
+    'USD'
+
+
+  const formatPrice =
+    (value: number): string =>
+      new Intl.NumberFormat(
+        'en-US',
+        {
+          style: 'currency',
+          currency:
+            currency === 'BTC' ||
+            currency === 'ETH'
+              ? 'USD'
+              : currency,
+          maximumFractionDigits:
+            value >= 100
+              ? 2
+              : 6,
+        },
+      ).format(value)
 
 
   const watchlistIds =
@@ -301,7 +543,7 @@ function MarketsPage() {
           watchlist.map(
             item =>
               watchlistId(
-                item.provider,
+                item.assetClass,
                 item.symbol,
               ),
           ),
@@ -317,21 +559,14 @@ function MarketsPage() {
           .trim()
           .toUpperCase()
 
-      const markets =
-        metadata?.markets ?? []
-
       const filtered =
-        markets.filter(
+        (
+          metadata?.markets ??
+          []
+        ).filter(
           market => {
-            const matchesQuote =
-              selectedQuote ===
-                'all' ||
-              market.quoteAsset ===
-                selectedQuote
-
             const matchesSearch =
-              normalizedSearch
-                .length === 0 ||
+              !normalizedSearch ||
               market.symbol
                 .toUpperCase()
                 .includes(
@@ -346,24 +581,18 @@ function MarketsPage() {
                 .toUpperCase()
                 .includes(
                   normalizedSearch,
-                ) ||
-              market.quoteAsset
-                .toUpperCase()
-                .includes(
-                  normalizedSearch,
                 )
 
             const matchesView =
               view === 'all' ||
               watchlistIds.has(
                 watchlistId(
-                  provider,
+                  assetClass,
                   market.symbol,
                 ),
               )
 
             return (
-              matchesQuote &&
               matchesSearch &&
               matchesView
             )
@@ -372,18 +601,10 @@ function MarketsPage() {
 
       return [...filtered].sort(
         (left, right) => {
-          const leftValue =
-            left[sortKey] ??
-            ''
-
-          const rightValue =
-            right[sortKey] ??
-            ''
-
           const comparison =
-            String(leftValue)
+            left[sortKey]
               .localeCompare(
-                String(rightValue),
+                right[sortKey],
                 undefined,
                 {
                   sensitivity:
@@ -398,10 +619,9 @@ function MarketsPage() {
         },
       )
     }, [
+      assetClass,
       metadata,
-      provider,
       search,
-      selectedQuote,
       sortDirection,
       sortKey,
       view,
@@ -409,81 +629,58 @@ function MarketsPage() {
     ])
 
 
-  const uniqueBaseAssets =
+  const chartData =
     useMemo(
       () =>
-        new Set(
-          metadata?.markets.map(
-            market =>
-              market.baseAsset,
-          ) ?? [],
-        ).size,
-      [metadata],
+        dashboard?.points.map(
+          point => ({
+            ...point,
+            chartDate:
+              shortDate(
+                point.date,
+              ),
+          }),
+        ) ?? [],
+      [dashboard],
     )
 
 
-  const providerWatchlistCount =
-    useMemo(
-      () =>
-        watchlist.filter(
-          item =>
-            item.provider ===
-            provider,
-        ).length,
-      [
-        provider,
-        watchlist,
-      ],
-    )
-
-
-  const activeMarket =
-    metadata?.markets.find(
-      market =>
-        market.symbol ===
-        selectedSymbol,
-    )
-
-
-  function changeProvider(
-    nextProvider:
-      MarketProvider,
+  function changeAssetClass(
+    nextAssetClass:
+      AssetClass,
   ): void {
     if (
-      nextProvider ===
-      provider
+      nextAssetClass ===
+      assetClass
     ) {
       return
     }
 
     const nextSymbol =
-      defaultSymbolForProvider(
-        nextProvider,
+      defaultSymbolForAssetClass(
+        nextAssetClass,
       )
 
-    setProvider(
-      nextProvider,
+    setAssetClass(
+      nextAssetClass,
     )
 
-    setMetadata(null)
-    setSearch('')
-    setView('all')
-    setLoading(true)
-    setError(null)
-
-    localStorage.setItem(
-      'quantstat-provider',
-      nextProvider,
-    )
-
-    localStorage.setItem(
-      'quantstat-symbol',
+    setSymbol(
       nextSymbol,
     )
 
-    localStorage.setItem(
-      'quantstat-interval',
-      '1440',
+    setInterval(
+      1440,
+    )
+
+    setMetadata(null)
+    setDashboard(null)
+    setSearch('')
+    setView('all')
+    setError(null)
+
+    localStorage.removeItem(
+      'quantstat-provider',
     )
 
     window.dispatchEvent(
@@ -491,8 +688,8 @@ function MarketsPage() {
         'quantstat-market-selection-changed',
         {
           detail: {
-            provider:
-              nextProvider,
+            assetClass:
+              nextAssetClass,
 
             symbol:
               nextSymbol,
@@ -503,12 +700,41 @@ function MarketsPage() {
   }
 
 
+  function selectMarket(
+    market:
+      MarketInstrument,
+  ): void {
+    setSymbol(
+      market.symbol,
+    )
+
+    setBrowserOpen(
+      false,
+    )
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'quantstat-market-selection-changed',
+        {
+          detail: {
+            assetClass,
+
+            symbol:
+              market.symbol,
+          },
+        },
+      ),
+    )
+  }
+
+
   function toggleWatchlist(
-    market: MarketInstrument,
+    market:
+      MarketInstrument,
   ): void {
     const id =
       watchlistId(
-        provider,
+        assetClass,
         market.symbol,
       )
 
@@ -517,21 +743,21 @@ function MarketsPage() {
         current.some(
           item =>
             watchlistId(
-              item.provider,
+              item.assetClass,
               item.symbol,
             ) === id,
         )
           ? current.filter(
               item =>
                 watchlistId(
-                  item.provider,
+                  item.assetClass,
                   item.symbol,
                 ) !== id,
             )
           : [
               ...current,
               {
-                provider,
+                assetClass,
                 symbol:
                   market.symbol,
               },
@@ -540,74 +766,13 @@ function MarketsPage() {
   }
 
 
-  function analyzeMarket(
-    market: MarketInstrument,
-  ): void {
-    localStorage.setItem(
-      'quantstat-provider',
-      provider,
-    )
-
-    localStorage.setItem(
-      'quantstat-symbol',
-      market.symbol,
-    )
-
-    const validInterval =
-      metadata?.intervals.some(
-        item =>
-          item.minutes ===
-            Number(
-              localStorage.getItem(
-                'quantstat-interval',
-              ) ?? 1440,
-            ),
-      )
-
-    if (!validInterval) {
-      const defaultInterval =
-        metadata?.intervals.find(
-          item =>
-            item.isDefault,
-        )
-        ??
-        metadata?.intervals[0]
-
-      localStorage.setItem(
-        'quantstat-interval',
-        (
-          defaultInterval
-            ?.minutes ??
-          1440
-        ).toString(),
-      )
-    }
-
-    window.dispatchEvent(
-      new CustomEvent(
-        'quantstat-market-selection-changed',
-        {
-          detail: {
-            provider,
-
-            symbol:
-              market.symbol,
-          },
-        },
-      ),
-    )
-
-    navigate(
-      '/dashboard',
-    )
-  }
-
-
   function changeSort(
-    nextKey: SortKey,
+    nextKey:
+      SortKey,
   ): void {
     if (
-      nextKey === sortKey
+      nextKey ===
+      sortKey
     ) {
       setSortDirection(
         current =>
@@ -631,7 +796,8 @@ function MarketsPage() {
 
 
   function sortIcon(
-    key: SortKey,
+    key:
+      SortKey,
   ) {
     if (sortKey !== key) {
       return (
@@ -656,18 +822,6 @@ function MarketsPage() {
   }
 
 
-  function marketIsActive(
-    market: MarketInstrument,
-  ): boolean {
-    return (
-      currentProvider() ===
-        provider &&
-      market.symbol ===
-        selectedSymbol
-    )
-  }
-
-
   return (
     <>
 
@@ -679,16 +833,28 @@ function MarketsPage() {
           </h1>
 
           <p>
-            Discover, organize, and analyze
-            available financial instruments.
+            Discover and analyze stocks
+            and cryptocurrencies with
+            Alpaca market data.
           </p>
+
+          <small>
+            Alpaca · {
+              assetClassLabel(
+                assetClass,
+              )
+            }
+          </small>
         </div>
 
 
         <button
           className="market-refresh-button"
           type="button"
-          disabled={loading}
+          disabled={
+            loadingMetadata ||
+            loadingDashboard
+          }
           onClick={() =>
             setRefreshKey(
               current =>
@@ -699,7 +865,8 @@ function MarketsPage() {
           <RefreshCw
             size={16}
             className={
-              loading
+              loadingMetadata ||
+              loadingDashboard
                 ? 'spinning'
                 : undefined
             }
@@ -711,274 +878,259 @@ function MarketsPage() {
       </section>
 
 
-      <section className="market-summary-grid">
+      <section className="filters unified-market-filters">
 
-        <article className="market-summary-card">
-          <span>
-            Provider
-          </span>
-
-          <strong>
-            {providerLabel(provider)}
-          </strong>
-
-          <small>
-            Active market-data source
-          </small>
-        </article>
-
-
-        <article className="market-summary-card">
-          <span>
-            Markets
-          </span>
-
-          <strong>
-            {metadata?.markets.length ?? '—'}
-          </strong>
-
-          <small>
-            Available instruments
-          </small>
-        </article>
-
-
-        <article className="market-summary-card">
-          <span>
-            Base assets
-          </span>
-
-          <strong>
-            {
-              metadata
-                ? uniqueBaseAssets
-                : '—'
-            }
-          </strong>
-
-          <small>
-            Distinct analyzed assets
-          </small>
-        </article>
-
-
-        <article className="market-summary-card active-market-card">
-          <span>
-            Watchlist
-          </span>
-
-          <strong>
-            {providerWatchlistCount}
-          </strong>
-
-          <small>
-            Saved for {providerLabel(provider)}
-          </small>
-        </article>
-
-      </section>
-
-
-      <section className="market-v2-toolbar">
-
-        <label className="market-v2-field">
-          <span>
-            Provider
-          </span>
+        <label>
+          Asset class
 
           <select
-            value={provider}
+            value={assetClass}
             onChange={event =>
-              changeProvider(
-                event.target.value as MarketProvider
+              changeAssetClass(
+                event.target.value as AssetClass
               )
             }
           >
-            <option value="kraken">
-              Kraken
+            <option value="stock">
+              Stocks
             </option>
 
-            <option value="coinbase">
-              Coinbase
+            <option value="crypto">
+              Crypto
             </option>
           </select>
         </label>
 
 
-        <label className="market-v2-field">
-          <span>
-            Quote currency
-          </span>
+        <label>
+          Instrument
 
           <select
-            value={selectedQuote}
+            value={symbol}
             onChange={event =>
-              setSelectedQuote(
+              setSymbol(
                 event.target.value,
               )
             }
           >
-            <option value="all">
-              All quotes
-            </option>
+            {metadata?.markets.map(
+              market => (
+                <option
+                  key={market.symbol}
+                  value={market.symbol}
+                >
+                  {market.displayName}
+                </option>
+              ),
+            )}
 
-            {metadata
-              ?.quoteCurrencies
-              .map(
-                quote => (
-                  <option
-                    key={quote}
-                    value={quote}
-                  >
-                    {quote}
-                  </option>
-                ),
-              )}
+            {!metadata && (
+              <option value={symbol}>
+                {symbol}
+              </option>
+            )}
           </select>
         </label>
 
 
-        <label className="market-v2-search">
-          <span>
-            Search markets
-          </span>
+        <label>
+          Interval
 
-          <div>
-            <Search size={17} />
-
-            <input
-              type="search"
-              value={search}
-              placeholder="Symbol, asset, or pair..."
-              onChange={event =>
-                setSearch(
+          <select
+            value={interval}
+            onChange={event =>
+              setInterval(
+                Number(
                   event.target.value,
-                )
-              }
-            />
-
-            {search && (
-              <button
-                type="button"
-                onClick={() =>
-                  setSearch('')
-                }
-              >
-                Clear
-              </button>
+                ),
+              )
+            }
+          >
+            {(metadata?.intervals ?? [
+              {
+                name: '1 Day',
+                minutes: 1440,
+                isDefault: true,
+              },
+            ]).map(
+              item => (
+                <option
+                  key={item.minutes}
+                  value={item.minutes}
+                >
+                  {item.name}
+                </option>
+              ),
             )}
-          </div>
+          </select>
+        </label>
+
+
+        <label>
+          Period
+
+          <select
+            value={periodDays}
+            onChange={event =>
+              setPeriodDays(
+                Number(
+                  event.target.value,
+                ),
+              )
+            }
+          >
+            {(metadata?.periods ?? [
+              {
+                name: '1 Year',
+                days: 365,
+                isDefault: true,
+              },
+            ]).map(
+              item => (
+                <option
+                  key={item.days}
+                  value={item.days}
+                >
+                  {item.name}
+                </option>
+              ),
+            )}
+          </select>
         </label>
 
       </section>
 
 
-      <section className="market-v2-tabs">
+      <section className="unified-market-browser-toggle">
 
         <button
           type="button"
-          className={
-            view === 'all'
-              ? 'active'
-              : undefined
-          }
           onClick={() =>
-            setView('all')
+            setBrowserOpen(
+              current =>
+                !current,
+            )
           }
         >
-          All markets
+          <Search size={16} />
 
-          <span>
-            {metadata?.markets.length ?? 0}
-          </span>
+          Browse instruments
+
+          {browserOpen
+            ? (
+              <ChevronUp
+                size={16}
+              />
+            )
+            : (
+              <ChevronDown
+                size={16}
+              />
+            )}
         </button>
 
-
-        <button
-          type="button"
-          className={
-            view === 'watchlist'
-              ? 'active'
-              : undefined
+        <span>
+          {
+            watchlist.filter(
+              item =>
+                item.assetClass ===
+                assetClass,
+            ).length
           }
-          onClick={() =>
-            setView('watchlist')
-          }
-        >
-          <Star size={14} />
-
-          Watchlist
-
-          <span>
-            {providerWatchlistCount}
-          </span>
-        </button>
+          {' '}
+          watchlist instruments
+        </span>
 
       </section>
 
 
-      {error && (
-        <section className="market-v2-error">
+      {browserOpen && (
+        <section className="unified-market-browser">
 
-          <div>
-            <strong>
-              {providerLabel(provider)}
-              {' '}
-              is unavailable
-            </strong>
+          <div className="market-v2-toolbar">
 
-            <p>
-              {error}
-            </p>
+            <label className="market-v2-search">
+              <span>
+                Search instruments
+              </span>
+
+              <div>
+                <Search size={17} />
+
+                <input
+                  type="search"
+                  value={search}
+                  placeholder={
+                    assetClass ===
+                      'stock'
+                      ? 'AAPL, Microsoft, NVIDIA...'
+                      : 'BTC, ETH, SOL...'
+                  }
+                  onChange={event =>
+                    setSearch(
+                      event.target.value,
+                    )
+                  }
+                />
+
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSearch('')
+                    }
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </label>
+
           </div>
 
-          <button
-            type="button"
-            onClick={() =>
-              setRefreshKey(
-                current =>
-                  current + 1,
-              )
-            }
-          >
-            Retry
-          </button>
 
-        </section>
-      )}
+          <div className="market-v2-tabs">
 
+            <button
+              type="button"
+              className={
+                view === 'all'
+                  ? 'active'
+                  : undefined
+              }
+              onClick={() =>
+                setView('all')
+              }
+            >
+              All instruments
 
-      {loading && !metadata ? (
-        <div className="loading-card">
-          Loading {
-            providerLabel(provider)
-          } markets...
-        </div>
-      ) : (
-        <section className="markets-table-card">
-
-          <div className="markets-table-header">
-
-            <div>
-              <h2>
-                Available instruments
-              </h2>
-
-              <p>
-                Showing {
-                  visibleMarkets.length
-                } of {
-                  metadata?.markets.length ?? 0
-                } markets
-              </p>
-            </div>
+              <span>
+                {
+                  metadata
+                    ?.markets
+                    .length ?? 0
+                }
+              </span>
+            </button>
 
 
-            <div className="provider-badge">
-              <Database size={13} />
+            <button
+              type="button"
+              className={
+                view === 'watchlist'
+                  ? 'active'
+                  : undefined
+              }
+              onClick={() =>
+                setView(
+                  'watchlist',
+                )
+              }
+            >
+              <Star size={14} />
 
-              {providerLabel(provider)}
-            </div>
+              Watchlist
+            </button>
 
           </div>
 
@@ -1002,7 +1154,7 @@ function MarketsPage() {
                         )
                       }
                     >
-                      Market
+                      Instrument
                       {sortIcon(
                         'displayName',
                       )}
@@ -1034,41 +1186,9 @@ function MarketsPage() {
                         )
                       }
                     >
-                      Base
+                      Asset
                       {sortIcon(
                         'baseAsset',
-                      )}
-                    </button>
-                  </th>
-
-                  <th>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeSort(
-                          'quoteAsset',
-                        )
-                      }
-                    >
-                      Quote
-                      {sortIcon(
-                        'quoteAsset',
-                      )}
-                    </button>
-                  </th>
-
-                  <th>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        changeSort(
-                          'provider',
-                        )
-                      }
-                    >
-                      Provider
-                      {sortIcon(
-                        'provider',
                       )}
                     </button>
                   </th>
@@ -1078,7 +1198,7 @@ function MarketsPage() {
                   </th>
 
                   <th className="market-action-column">
-                    Action
+                    Selection
                   </th>
                 </tr>
               </thead>
@@ -1089,14 +1209,13 @@ function MarketsPage() {
                 {visibleMarkets.map(
                   market => {
                     const active =
-                      marketIsActive(
-                        market,
-                      )
+                      market.symbol ===
+                      symbol
 
                     const watched =
                       watchlistIds.has(
                         watchlistId(
-                          provider,
+                          assetClass,
                           market.symbol,
                         ),
                       )
@@ -1118,11 +1237,6 @@ function MarketsPage() {
                               watched
                                 ? 'market-watch-button active'
                                 : 'market-watch-button'
-                            }
-                            title={
-                              watched
-                                ? 'Remove from watchlist'
-                                : 'Add to watchlist'
                             }
                             onClick={() =>
                               toggleWatchlist(
@@ -1158,11 +1272,11 @@ function MarketsPage() {
                                 {market.displayName}
                               </strong>
 
-                              {active && (
-                                <small>
-                                  Dashboard selection
-                                </small>
-                              )}
+                              <small>
+                                {assetClassLabel(
+                                  assetClass,
+                                )}
+                              </small>
                             </div>
 
                           </div>
@@ -1176,18 +1290,6 @@ function MarketsPage() {
 
                         <td>
                           {market.baseAsset}
-                        </td>
-
-
-                        <td>
-                          <span className="quote-pill">
-                            {market.quoteAsset}
-                          </span>
-                        </td>
-
-
-                        <td>
-                          {market.provider}
                         </td>
 
 
@@ -1209,14 +1311,16 @@ function MarketsPage() {
                           <button
                             type="button"
                             className="market-analyze-button"
+                            disabled={active}
                             onClick={() =>
-                              analyzeMarket(
+                              selectMarket(
                                 market,
                               )
                             }
                           >
-                            Analyze
-                            <ArrowRight size={14} />
+                            {active
+                              ? 'Selected'
+                              : 'Select'}
                           </button>
                         </td>
 
@@ -1229,26 +1333,11 @@ function MarketsPage() {
                 {visibleMarkets.length === 0 && (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={6}
                       className="empty-market-result"
                     >
-                      <strong>
-                        {
-                          view === 'watchlist'
-                            ? 'Your watchlist is empty.'
-                            : search
-                              ? `No markets match "${search}".`
-                              : `No ${selectedQuote === 'all' ? '' : `${selectedQuote} `}markets are available.`
-                        }
-                      </strong>
-
-                      <small>
-                        {
-                          view === 'watchlist'
-                            ? 'Star an instrument to save it here.'
-                            : 'Try clearing the search or changing the quote currency.'
-                        }
-                      </small>
+                      No instruments match
+                      the current criteria.
                     </td>
                   </tr>
                 )}
@@ -1259,27 +1348,312 @@ function MarketsPage() {
 
           </div>
 
-
-          <footer className="markets-footer">
-
-            <span>
-              Select Analyze to open the
-              instrument in Dashboard.
-            </span>
-
-            <strong>
-              Active:
-              {' '}
-              {
-                activeMarket
-                  ?.displayName ??
-                selectedSymbol
-              }
-            </strong>
-
-          </footer>
-
         </section>
+      )}
+
+
+      {error && (
+        <div className="error-banner">
+          {error}
+        </div>
+      )}
+
+
+      {loadingDashboard &&
+      !dashboard ? (
+        <div className="loading-card">
+          Loading {
+            assetClassLabel(
+              assetClass,
+            ).toLowerCase()
+          } analysis...
+        </div>
+      ) : dashboard && (
+        <>
+
+          <section className="metric-grid">
+
+            <article className="metric-card">
+              <span>
+                Latest price
+              </span>
+
+              <strong>
+                {formatPrice(
+                  dashboard.latestPrice,
+                )}
+              </strong>
+
+              <small>
+                Latest completed close
+              </small>
+            </article>
+
+
+            <article className="metric-card">
+              <span>
+                Price change
+              </span>
+
+              <strong
+                className={
+                  dashboard
+                    .priceChangePercent >= 0
+                    ? 'positive'
+                    : 'negative'
+                }
+              >
+                {formatPercent(
+                  dashboard
+                    .priceChangePercent,
+                )}
+              </strong>
+
+              <small>
+                {formatPrice(
+                  dashboard.priceChange,
+                )}
+              </small>
+            </article>
+
+
+            <article className="metric-card">
+              <span>
+                Observations
+              </span>
+
+              <strong>
+                {
+                  dashboard
+                    .observationCount
+                }
+              </strong>
+
+              <small>
+                Completed bars
+              </small>
+            </article>
+
+
+            <article className="metric-card">
+              <span>
+                Annualized volatility
+              </span>
+
+              <strong>
+                {(
+                  dashboard
+                    .annualizedVolatility *
+                  100
+                ).toFixed(2)}%
+              </strong>
+
+              <small>
+                Based on log returns
+              </small>
+            </article>
+
+          </section>
+
+
+          <section className="chart-card">
+
+            <div className="card-heading">
+
+              <div>
+                <h2>
+                  Price
+                </h2>
+
+                <p>
+                  {
+                    selectedMarket
+                      ?.displayName ??
+                    symbol
+                  }
+                </p>
+              </div>
+
+              <div className="legend">
+                <span className="price-key">
+                  Price
+                </span>
+
+                <span className="mean-key">
+                  Mean
+                </span>
+              </div>
+
+            </div>
+
+
+            <div className="chart-container">
+
+              <ResponsiveContainer>
+
+                <ComposedChart
+                  data={chartData}
+                  margin={{
+                    top: 10,
+                    right: 18,
+                    left: 8,
+                    bottom: 0,
+                  }}
+                >
+                  <CartesianGrid
+                    stroke="var(--grid)"
+                    strokeDasharray="3 3"
+                  />
+
+                  <XAxis
+                    dataKey="chartDate"
+                    minTickGap={40}
+                    tick={{
+                      fill:
+                        'var(--muted)',
+                      fontSize: 11,
+                    }}
+                  />
+
+                  <YAxis
+                    domain={[
+                      'auto',
+                      'auto',
+                    ]}
+                    width={75}
+                    tick={{
+                      fill:
+                        'var(--muted)',
+                      fontSize: 11,
+                    }}
+                  />
+
+                  <Tooltip />
+
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#6c8cff"
+                    strokeWidth={2.3}
+                    dot={false}
+                    name="Price"
+                  />
+
+                  <Line
+                    type="linear"
+                    dataKey="meanPrice"
+                    stroke="#f59e0b"
+                    strokeWidth={1.5}
+                    strokeDasharray="7 5"
+                    dot={false}
+                    name="Mean"
+                  />
+
+                </ComposedChart>
+
+              </ResponsiveContainer>
+
+            </div>
+
+          </section>
+
+
+          <section className="chart-card">
+
+            <div className="card-heading">
+
+              <div>
+                <h2>
+                  Wilder RSI
+                </h2>
+
+                <p>
+                  14-period momentum
+                  indicator
+                </p>
+              </div>
+
+              <div className="rsi-value">
+                {
+                  dashboard.points
+                    .at(-1)
+                    ?.wilderRsi
+                    ?.toFixed(2)
+                  ??
+                  '—'
+                }
+              </div>
+
+            </div>
+
+
+            <div className="chart-container rsi-chart">
+
+              <ResponsiveContainer>
+
+                <LineChart
+                  data={chartData}
+                >
+                  <CartesianGrid
+                    stroke="var(--grid)"
+                    strokeDasharray="3 3"
+                  />
+
+                  <XAxis
+                    dataKey="chartDate"
+                    minTickGap={40}
+                    tick={{
+                      fill:
+                        'var(--muted)',
+                      fontSize: 11,
+                    }}
+                  />
+
+                  <YAxis
+                    domain={[0, 100]}
+                    ticks={[
+                      0,
+                      30,
+                      50,
+                      70,
+                      100,
+                    ]}
+                    width={45}
+                  />
+
+                  <Tooltip />
+
+                  <ReferenceLine
+                    y={70}
+                    stroke="#ef4444"
+                    strokeDasharray="5 5"
+                  />
+
+                  <ReferenceLine
+                    y={30}
+                    stroke="#22c55e"
+                    strokeDasharray="5 5"
+                  />
+
+                  <Line
+                    type="monotone"
+                    dataKey="wilderRsi"
+                    stroke="#a78bfa"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                    name="Wilder RSI"
+                  />
+
+                </LineChart>
+
+              </ResponsiveContainer>
+
+            </div>
+
+          </section>
+
+        </>
       )}
 
     </>
