@@ -1,14 +1,17 @@
-﻿import {
+import {
   usePreferences,
 } from '../../preferences/PreferencesContext'
 
 import {
-  ArrowDownAZ,
-  ArrowUpAZ,
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   CheckCircle2,
   Database,
   RefreshCw,
   Search,
+  Star,
 } from 'lucide-react'
 
 import {
@@ -18,7 +21,7 @@ import {
 } from 'react'
 
 import {
-  Link,
+  useNavigate,
 } from 'react-router-dom'
 
 import {
@@ -29,9 +32,26 @@ import {
 } from '../../api/quantStatApi'
 
 import type {
+  MarketProvider,
+} from '../../api/quantStatApi'
+
+import type {
   MarketInstrument,
   MarketMetadata,
 } from '../../models/market'
+
+
+type MarketView =
+  | 'all'
+  | 'watchlist'
+
+
+type SortKey =
+  | 'displayName'
+  | 'symbol'
+  | 'baseAsset'
+  | 'quoteAsset'
+  | 'provider'
 
 
 type SortDirection =
@@ -39,24 +59,117 @@ type SortDirection =
   | 'descending'
 
 
+interface WatchlistItem {
+  provider: MarketProvider
+  symbol: string
+}
+
+
+const WATCHLIST_KEY =
+  'quantstat-market-watchlist'
+
+
+function readWatchlist():
+  WatchlistItem[] {
+  try {
+    const stored =
+      localStorage.getItem(
+        WATCHLIST_KEY,
+      )
+
+    if (!stored) {
+      return []
+    }
+
+    const parsed =
+      JSON.parse(stored)
+
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.filter(
+      item =>
+        item &&
+        (
+          item.provider ===
+            'kraken' ||
+          item.provider ===
+            'coinbase'
+        ) &&
+        typeof item.symbol ===
+          'string',
+    )
+  }
+  catch {
+    return []
+  }
+}
+
+
+function watchlistId(
+  provider: MarketProvider,
+  symbol: string,
+): string {
+  return `${provider}:${symbol}`
+}
+
+
 function MarketsPage() {
+  const navigate =
+    useNavigate()
+
   const {
     preferences,
-  } = usePreferences()
+  } =
+    usePreferences()
 
-  const provider =
-    currentProvider()
+  const [
+    provider,
+    setProvider,
+  ] =
+    useState<MarketProvider>(
+      () =>
+        currentProvider(),
+    )
 
-  const [metadata, setMetadata] =
+  const [
+    metadata,
+    setMetadata,
+  ] =
     useState<MarketMetadata | null>(
       null,
     )
 
-  const [search, setSearch] =
+  const [
+    search,
+    setSearch,
+  ] =
     useState('')
 
-  const quoteCurrency =
-    preferences.currency
+  const [
+    selectedQuote,
+    setSelectedQuote,
+  ] =
+    useState<string>(
+      preferences.currency,
+    )
+
+  const [
+    view,
+    setView,
+  ] =
+    useState<MarketView>(
+      'all',
+    )
+
+  const [
+    sortKey,
+    setSortKey,
+  ] =
+    useState<SortKey>(
+      'displayName',
+    )
 
   const [
     sortDirection,
@@ -66,7 +179,10 @@ function MarketsPage() {
       'ascending',
     )
 
-  const [loading, setLoading] =
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true)
 
   const [
@@ -75,10 +191,23 @@ function MarketsPage() {
   ] =
     useState(0)
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState<string | null>(
       null,
     )
+
+  const [
+    watchlist,
+    setWatchlist,
+  ] =
+    useState<WatchlistItem[]>(
+      () =>
+        readWatchlist(),
+    )
+
 
   const selectedSymbol =
     localStorage.getItem(
@@ -87,6 +216,18 @@ function MarketsPage() {
     defaultSymbolForProvider(
       provider,
     )
+
+
+  useEffect(() => {
+    localStorage.setItem(
+      WATCHLIST_KEY,
+      JSON.stringify(
+        watchlist,
+      ),
+    )
+  }, [
+    watchlist,
+  ])
 
 
   useEffect(() => {
@@ -100,16 +241,33 @@ function MarketsPage() {
       controller.signal,
       provider,
     )
-      .then(setMetadata)
+      .then(result => {
+        setMetadata(result)
+
+        const preferredQuoteExists =
+          result.quoteCurrencies
+            .includes(
+              preferences.currency,
+            )
+
+        setSelectedQuote(
+          preferredQuoteExists
+            ? preferences.currency
+            : 'all',
+        )
+      })
       .catch(
         (reason: unknown) => {
           if (
-            reason instanceof DOMException &&
+            reason instanceof
+              DOMException &&
             reason.name ===
               'AbortError'
           ) {
             return
           }
+
+          setMetadata(null)
 
           setError(
             reason instanceof Error
@@ -120,7 +278,8 @@ function MarketsPage() {
       )
       .finally(() => {
         if (
-          !controller.signal.aborted
+          !controller.signal
+            .aborted
         ) {
           setLoading(false)
         }
@@ -129,31 +288,50 @@ function MarketsPage() {
     return () =>
       controller.abort()
   }, [
-    refreshKey,
     provider,
+    refreshKey,
+    preferences.currency,
   ])
 
 
-  const filteredMarkets =
+  const watchlistIds =
+    useMemo(
+      () =>
+        new Set(
+          watchlist.map(
+            item =>
+              watchlistId(
+                item.provider,
+                item.symbol,
+              ),
+          ),
+        ),
+      [watchlist],
+    )
+
+
+  const visibleMarkets =
     useMemo(() => {
       const normalizedSearch =
         search
           .trim()
           .toUpperCase()
 
-      const availableMarkets =
+      const markets =
         metadata?.markets ?? []
 
       const filtered =
-        availableMarkets.filter(
+        markets.filter(
           market => {
             const matchesQuote =
+              selectedQuote ===
+                'all' ||
               market.quoteAsset ===
-              quoteCurrency
+                selectedQuote
 
             const matchesSearch =
-              normalizedSearch.length ===
-                0 ||
+              normalizedSearch
+                .length === 0 ||
               market.symbol
                 .toUpperCase()
                 .includes(
@@ -175,19 +353,42 @@ function MarketsPage() {
                   normalizedSearch,
                 )
 
+            const matchesView =
+              view === 'all' ||
+              watchlistIds.has(
+                watchlistId(
+                  provider,
+                  market.symbol,
+                ),
+              )
+
             return (
               matchesQuote &&
-              matchesSearch
+              matchesSearch &&
+              matchesView
             )
           },
         )
 
       return [...filtered].sort(
         (left, right) => {
+          const leftValue =
+            left[sortKey] ??
+            ''
+
+          const rightValue =
+            right[sortKey] ??
+            ''
+
           const comparison =
-            left.displayName
+            String(leftValue)
               .localeCompare(
-                right.displayName,
+                String(rightValue),
+                undefined,
+                {
+                  sensitivity:
+                    'base',
+                },
               )
 
           return sortDirection ===
@@ -198,9 +399,13 @@ function MarketsPage() {
       )
     }, [
       metadata,
+      provider,
       search,
-      quoteCurrency,
+      selectedQuote,
       sortDirection,
+      sortKey,
+      view,
+      watchlistIds,
     ])
 
 
@@ -217,6 +422,21 @@ function MarketsPage() {
     )
 
 
+  const providerWatchlistCount =
+    useMemo(
+      () =>
+        watchlist.filter(
+          item =>
+            item.provider ===
+            provider,
+        ).length,
+      [
+        provider,
+        watchlist,
+      ],
+    )
+
+
   const activeMarket =
     metadata?.markets.find(
       market =>
@@ -225,13 +445,214 @@ function MarketsPage() {
     )
 
 
-  function toggleSort(): void {
-    setSortDirection(
-      current =>
-        current === 'ascending'
-          ? 'descending'
-          : 'ascending',
+  function changeProvider(
+    nextProvider:
+      MarketProvider,
+  ): void {
+    if (
+      nextProvider ===
+      provider
+    ) {
+      return
+    }
+
+    const nextSymbol =
+      defaultSymbolForProvider(
+        nextProvider,
+      )
+
+    setProvider(
+      nextProvider,
     )
+
+    setMetadata(null)
+    setSearch('')
+    setView('all')
+    setLoading(true)
+    setError(null)
+
+    localStorage.setItem(
+      'quantstat-provider',
+      nextProvider,
+    )
+
+    localStorage.setItem(
+      'quantstat-symbol',
+      nextSymbol,
+    )
+
+    localStorage.setItem(
+      'quantstat-interval',
+      '1440',
+    )
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'quantstat-market-selection-changed',
+        {
+          detail: {
+            provider:
+              nextProvider,
+
+            symbol:
+              nextSymbol,
+          },
+        },
+      ),
+    )
+  }
+
+
+  function toggleWatchlist(
+    market: MarketInstrument,
+  ): void {
+    const id =
+      watchlistId(
+        provider,
+        market.symbol,
+      )
+
+    setWatchlist(
+      current =>
+        current.some(
+          item =>
+            watchlistId(
+              item.provider,
+              item.symbol,
+            ) === id,
+        )
+          ? current.filter(
+              item =>
+                watchlistId(
+                  item.provider,
+                  item.symbol,
+                ) !== id,
+            )
+          : [
+              ...current,
+              {
+                provider,
+                symbol:
+                  market.symbol,
+              },
+            ],
+    )
+  }
+
+
+  function analyzeMarket(
+    market: MarketInstrument,
+  ): void {
+    localStorage.setItem(
+      'quantstat-provider',
+      provider,
+    )
+
+    localStorage.setItem(
+      'quantstat-symbol',
+      market.symbol,
+    )
+
+    const validInterval =
+      metadata?.intervals.some(
+        item =>
+          item.minutes ===
+            Number(
+              localStorage.getItem(
+                'quantstat-interval',
+              ) ?? 1440,
+            ),
+      )
+
+    if (!validInterval) {
+      const defaultInterval =
+        metadata?.intervals.find(
+          item =>
+            item.isDefault,
+        )
+        ??
+        metadata?.intervals[0]
+
+      localStorage.setItem(
+        'quantstat-interval',
+        (
+          defaultInterval
+            ?.minutes ??
+          1440
+        ).toString(),
+      )
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'quantstat-market-selection-changed',
+        {
+          detail: {
+            provider,
+
+            symbol:
+              market.symbol,
+          },
+        },
+      ),
+    )
+
+    navigate(
+      '/dashboard',
+    )
+  }
+
+
+  function changeSort(
+    nextKey: SortKey,
+  ): void {
+    if (
+      nextKey === sortKey
+    ) {
+      setSortDirection(
+        current =>
+          current ===
+            'ascending'
+            ? 'descending'
+            : 'ascending',
+      )
+
+      return
+    }
+
+    setSortKey(
+      nextKey,
+    )
+
+    setSortDirection(
+      'ascending',
+    )
+  }
+
+
+  function sortIcon(
+    key: SortKey,
+  ) {
+    if (sortKey !== key) {
+      return (
+        <ArrowUpDown
+          size={13}
+        />
+      )
+    }
+
+    return sortDirection ===
+      'ascending'
+        ? (
+          <ArrowUp
+            size={13}
+          />
+        )
+        : (
+          <ArrowDown
+            size={13}
+          />
+        )
   }
 
 
@@ -239,8 +660,10 @@ function MarketsPage() {
     market: MarketInstrument,
   ): boolean {
     return (
+      currentProvider() ===
+        provider &&
       market.symbol ===
-      selectedSymbol
+        selectedSymbol
     )
   }
 
@@ -256,8 +679,8 @@ function MarketsPage() {
           </h1>
 
           <p>
-            Discover available market pairs
-            and quote currencies
+            Discover, organize, and analyze
+            available financial instruments.
           </p>
         </div>
 
@@ -292,7 +715,22 @@ function MarketsPage() {
 
         <article className="market-summary-card">
           <span>
-            Tradable pairs
+            Provider
+          </span>
+
+          <strong>
+            {providerLabel(provider)}
+          </strong>
+
+          <small>
+            Active market-data source
+          </small>
+        </article>
+
+
+        <article className="market-summary-card">
+          <span>
+            Markets
           </span>
 
           <strong>
@@ -300,7 +738,7 @@ function MarketsPage() {
           </strong>
 
           <small>
-            Available from the provider
+            Available instruments
           </small>
         </article>
 
@@ -324,114 +762,197 @@ function MarketsPage() {
         </article>
 
 
-        <article className="market-summary-card">
-          <span>
-            Quote currencies
-          </span>
-
-          <strong>
-            {
-              metadata
-                ?.quoteCurrencies
-                .length
-              ??
-              '—'
-            }
-          </strong>
-
-          <small>
-            Available quote markets
-          </small>
-        </article>
-
-
         <article className="market-summary-card active-market-card">
           <span>
-            Dashboard market
+            Watchlist
           </span>
 
           <strong>
-            {
-              activeMarket
-                ?.displayName
-              ??
-              selectedSymbol
-            }
+            {providerWatchlistCount}
           </strong>
 
           <small>
-            Active analysis selection
+            Saved for {providerLabel(provider)}
           </small>
         </article>
 
       </section>
 
 
-      <section className="market-controls">
+      <section className="market-v2-toolbar">
 
-        <label className="market-search">
+        <label className="market-v2-field">
+          <span>
+            Provider
+          </span>
 
-          <Search size={17} />
-
-          <input
-            type="search"
-            value={search}
-            placeholder="Search symbol or asset..."
+          <select
+            value={provider}
             onChange={event =>
-              setSearch(
-                event.target.value,
+              changeProvider(
+                event.target.value as MarketProvider
               )
             }
-          />
+          >
+            <option value="kraken">
+              Kraken
+            </option>
 
+            <option value="coinbase">
+              Coinbase
+            </option>
+          </select>
         </label>
 
 
-        <div className="market-quote-filter locked-quote-filter">
+        <label className="market-v2-field">
           <span>
-            Quote
+            Quote currency
           </span>
 
-          <strong>
-            {preferences.currency}
-          </strong>
-        </div>
+          <select
+            value={selectedQuote}
+            onChange={event =>
+              setSelectedQuote(
+                event.target.value,
+              )
+            }
+          >
+            <option value="all">
+              All quotes
+            </option>
+
+            {metadata
+              ?.quoteCurrencies
+              .map(
+                quote => (
+                  <option
+                    key={quote}
+                    value={quote}
+                  >
+                    {quote}
+                  </option>
+                ),
+              )}
+          </select>
+        </label>
+
+
+        <label className="market-v2-search">
+          <span>
+            Search markets
+          </span>
+
+          <div>
+            <Search size={17} />
+
+            <input
+              type="search"
+              value={search}
+              placeholder="Symbol, asset, or pair..."
+              onChange={event =>
+                setSearch(
+                  event.target.value,
+                )
+              }
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSearch('')
+                }
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </label>
+
+      </section>
+
+
+      <section className="market-v2-tabs">
+
+        <button
+          type="button"
+          className={
+            view === 'all'
+              ? 'active'
+              : undefined
+          }
+          onClick={() =>
+            setView('all')
+          }
+        >
+          All markets
+
+          <span>
+            {metadata?.markets.length ?? 0}
+          </span>
+        </button>
 
 
         <button
-          className="market-sort-button"
           type="button"
-          onClick={toggleSort}
+          className={
+            view === 'watchlist'
+              ? 'active'
+              : undefined
+          }
+          onClick={() =>
+            setView('watchlist')
+          }
         >
-          {sortDirection ===
-          'ascending'
-            ? (
-              <ArrowDownAZ
-                size={17}
-              />
-            )
-            : (
-              <ArrowUpAZ
-                size={17}
-              />
-            )}
+          <Star size={14} />
 
-          Sort
+          Watchlist
+
+          <span>
+            {providerWatchlistCount}
+          </span>
         </button>
 
       </section>
 
 
       {error && (
-        <div className="error-banner">
-          {error}
-        </div>
+        <section className="market-v2-error">
+
+          <div>
+            <strong>
+              {providerLabel(provider)}
+              {' '}
+              is unavailable
+            </strong>
+
+            <p>
+              {error}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setRefreshKey(
+                current =>
+                  current + 1,
+              )
+            }
+          >
+            Retry
+          </button>
+
+        </section>
       )}
 
 
       {loading && !metadata ? (
         <div className="loading-card">
-          Loading available markets...
+          Loading {
+            providerLabel(provider)
+          } markets...
         </div>
       ) : (
         <section className="markets-table-card">
@@ -445,7 +966,7 @@ function MarketsPage() {
 
               <p>
                 Showing {
-                  filteredMarkets.length
+                  visibleMarkets.length
                 } of {
                   metadata?.markets.length ?? 0
                 } markets
@@ -455,6 +976,7 @@ function MarketsPage() {
 
             <div className="provider-badge">
               <Database size={13} />
+
               {providerLabel(provider)}
             </div>
 
@@ -463,32 +985,100 @@ function MarketsPage() {
 
           <div className="markets-table-scroll">
 
-            <table className="markets-table">
+            <table className="markets-table market-v2-table">
 
               <thead>
                 <tr>
-                  <th>
-                    Market
+                  <th className="market-watch-column">
+                    Watch
                   </th>
 
                   <th>
-                    Symbol
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeSort(
+                          'displayName',
+                        )
+                      }
+                    >
+                      Market
+                      {sortIcon(
+                        'displayName',
+                      )}
+                    </button>
                   </th>
 
                   <th>
-                    Base asset
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeSort(
+                          'symbol',
+                        )
+                      }
+                    >
+                      Symbol
+                      {sortIcon(
+                        'symbol',
+                      )}
+                    </button>
                   </th>
 
                   <th>
-                    Quote asset
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeSort(
+                          'baseAsset',
+                        )
+                      }
+                    >
+                      Base
+                      {sortIcon(
+                        'baseAsset',
+                      )}
+                    </button>
                   </th>
 
                   <th>
-                    Provider
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeSort(
+                          'quoteAsset',
+                        )
+                      }
+                    >
+                      Quote
+                      {sortIcon(
+                        'quoteAsset',
+                      )}
+                    </button>
+                  </th>
+
+                  <th>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        changeSort(
+                          'provider',
+                        )
+                      }
+                    >
+                      Provider
+                      {sortIcon(
+                        'provider',
+                      )}
+                    </button>
                   </th>
 
                   <th>
                     Status
+                  </th>
+
+                  <th className="market-action-column">
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -496,11 +1086,19 @@ function MarketsPage() {
 
               <tbody>
 
-                {filteredMarkets.map(
+                {visibleMarkets.map(
                   market => {
                     const active =
                       marketIsActive(
                         market,
+                      )
+
+                    const watched =
+                      watchlistIds.has(
+                        watchlistId(
+                          provider,
+                          market.symbol,
+                        ),
                       )
 
                     return (
@@ -512,6 +1110,37 @@ function MarketsPage() {
                             : undefined
                         }
                       >
+
+                        <td className="market-watch-column">
+                          <button
+                            type="button"
+                            className={
+                              watched
+                                ? 'market-watch-button active'
+                                : 'market-watch-button'
+                            }
+                            title={
+                              watched
+                                ? 'Remove from watchlist'
+                                : 'Add to watchlist'
+                            }
+                            onClick={() =>
+                              toggleWatchlist(
+                                market,
+                              )
+                            }
+                          >
+                            <Star
+                              size={16}
+                              fill={
+                                watched
+                                  ? 'currentColor'
+                                  : 'none'
+                              }
+                            />
+                          </button>
+                        </td>
+
 
                         <td>
                           <div className="market-name-cell">
@@ -526,10 +1155,7 @@ function MarketsPage() {
 
                             <div>
                               <strong>
-                                {
-                                  market
-                                    .displayName
-                                }
+                                {market.displayName}
                               </strong>
 
                               {active && (
@@ -578,20 +1204,51 @@ function MarketsPage() {
                           )}
                         </td>
 
+
+                        <td className="market-action-column">
+                          <button
+                            type="button"
+                            className="market-analyze-button"
+                            onClick={() =>
+                              analyzeMarket(
+                                market,
+                              )
+                            }
+                          >
+                            Analyze
+                            <ArrowRight size={14} />
+                          </button>
+                        </td>
+
                       </tr>
                     )
                   },
                 )}
 
 
-                {filteredMarkets.length === 0 && (
+                {visibleMarkets.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={8}
                       className="empty-market-result"
                     >
-                      No markets match the
-                      current search and filter.
+                      <strong>
+                        {
+                          view === 'watchlist'
+                            ? 'Your watchlist is empty.'
+                            : search
+                              ? `No markets match "${search}".`
+                              : `No ${selectedQuote === 'all' ? '' : `${selectedQuote} `}markets are available.`
+                        }
+                      </strong>
+
+                      <small>
+                        {
+                          view === 'watchlist'
+                            ? 'Star an instrument to save it here.'
+                            : 'Try clearing the search or changing the quote currency.'
+                        }
+                      </small>
                     </td>
                   </tr>
                 )}
@@ -606,16 +1263,19 @@ function MarketsPage() {
           <footer className="markets-footer">
 
             <span>
-              Market selection is managed
-              from Dashboard.
+              Select Analyze to open the
+              instrument in Dashboard.
             </span>
 
-            <Link
-              to="/dashboard"
-              className="dashboard-link"
-            >
-              Open Dashboard
-            </Link>
+            <strong>
+              Active:
+              {' '}
+              {
+                activeMarket
+                  ?.displayName ??
+                selectedSymbol
+              }
+            </strong>
 
           </footer>
 
