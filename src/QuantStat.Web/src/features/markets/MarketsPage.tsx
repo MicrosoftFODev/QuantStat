@@ -1,4 +1,4 @@
-import {
+﻿import {
   usePreferences,
 } from '../../preferences/PreferencesContext'
 
@@ -1093,7 +1093,7 @@ function MarketsPage() {
           </p>
 
           <small>
-            Alpaca · {
+            Alpaca Â· {
               assetClassLabel(
                 assetClass,
               )
@@ -1126,7 +1126,12 @@ function MarketsPage() {
             }
           />
 
-          Refresh
+          {
+            loadingMetadata ||
+            loadingDashboard
+              ? 'Updating...'
+              : 'Refresh'
+          }
         </button>
 
       </section>
@@ -1858,7 +1863,7 @@ function MarketsPage() {
                     ?.wilderRsi
                     ?.toFixed(2)
                   ??
-                  '—'
+                  'â€”'
                 }
               </div>
 
@@ -1960,3 +1965,4 @@ function MarketsPage() {
 
 
 export default MarketsPage
+
