@@ -71,6 +71,122 @@ public sealed class AlpacaMarketDataProvider :
                 "TSLA",
                 "Tesla Inc."),
 
+            CreateStock(
+                "AMD",
+                "Advanced Micro Devices Inc."),
+
+            CreateStock(
+                "NFLX",
+                "Netflix Inc."),
+
+            CreateStock(
+                "AVGO",
+                "Broadcom Inc."),
+
+            CreateStock(
+                "ORCL",
+                "Oracle Corporation"),
+
+            CreateStock(
+                "CRM",
+                "Salesforce Inc."),
+
+            CreateStock(
+                "ADBE",
+                "Adobe Inc."),
+
+            CreateStock(
+                "INTC",
+                "Intel Corporation"),
+
+            CreateStock(
+                "JPM",
+                "JPMorgan Chase & Co."),
+
+            CreateStock(
+                "BAC",
+                "Bank of America Corporation"),
+
+            CreateStock(
+                "GS",
+                "Goldman Sachs Group Inc."),
+
+            CreateStock(
+                "V",
+                "Visa Inc."),
+
+            CreateStock(
+                "MA",
+                "Mastercard Incorporated"),
+
+            CreateStock(
+                "BRK.B",
+                "Berkshire Hathaway Inc."),
+
+            CreateStock(
+                "JNJ",
+                "Johnson & Johnson"),
+
+            CreateStock(
+                "LLY",
+                "Eli Lilly and Company"),
+
+            CreateStock(
+                "UNH",
+                "UnitedHealth Group Incorporated"),
+
+            CreateStock(
+                "WMT",
+                "Walmart Inc."),
+
+            CreateStock(
+                "COST",
+                "Costco Wholesale Corporation"),
+
+            CreateStock(
+                "KO",
+                "Coca-Cola Company"),
+
+            CreateStock(
+                "PEP",
+                "PepsiCo Inc."),
+
+            CreateStock(
+                "XOM",
+                "Exxon Mobil Corporation"),
+
+            CreateStock(
+                "CVX",
+                "Chevron Corporation"),
+
+            CreateStock(
+                "DIS",
+                "Walt Disney Company"),
+
+            CreateStock(
+                "UBER",
+                "Uber Technologies Inc."),
+
+            CreateStock(
+                "PYPL",
+                "PayPal Holdings Inc."),
+
+            CreateStock(
+                "SPY",
+                "SPDR S&P 500 ETF Trust"),
+
+            CreateStock(
+                "QQQ",
+                "Invesco QQQ Trust"),
+
+            CreateStock(
+                "DIA",
+                "SPDR Dow Jones Industrial Average ETF Trust"),
+
+            CreateStock(
+                "IWM",
+                "iShares Russell 2000 ETF"),
+
             CreateCrypto(
                 "BTC/USD"),
 
@@ -818,35 +934,6 @@ public sealed class AlpacaMarketDataProvider :
     {
         return
         [
-            new()
-            {
-                Name = "1 Minute",
-                Minutes = 1
-            },
-
-            new()
-            {
-                Name = "5 Minutes",
-                Minutes = 5
-            },
-
-            new()
-            {
-                Name = "15 Minutes",
-                Minutes = 15
-            },
-
-            new()
-            {
-                Name = "30 Minutes",
-                Minutes = 30
-            },
-
-            new()
-            {
-                Name = "1 Hour",
-                Minutes = 60
-            },
 
             new()
             {
