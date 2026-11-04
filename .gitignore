@@ -35,3 +35,14 @@ coverage/
 # Operating system
 .DS_Store
 Thumbs.db
+
+# Local development backups
+*.bak
+*.before-*
+
+# Copilot / development inspection files
+quantstat-*-inspection.txt
+quantstat-*-current.txt
+
+# Temporary patch scripts
+apply-*.ps1
