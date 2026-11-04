@@ -145,6 +145,260 @@ function readWatchlist():
 }
 
 
+type ChartTooltipPayload = {
+  payload?: {
+    date?: string
+    price?: number
+    meanPrice?: number
+    wilderRsi?: number | null
+  }
+}
+
+
+type MarketTooltipProps = {
+  active?: boolean
+  payload?: readonly ChartTooltipPayload[]
+  symbol: string
+  formatPrice: (value: number) => string
+}
+
+
+function PriceTooltip({
+  active,
+  payload,
+  symbol,
+  formatPrice,
+}: MarketTooltipProps) {
+  if (
+    !active ||
+    !payload?.length
+  ) {
+    return null
+  }
+
+  const point =
+    payload[0]?.payload
+
+  if (
+    !point ||
+    typeof point.price !== 'number'
+  ) {
+    return null
+  }
+
+  const differenceFromMean =
+    typeof point.meanPrice === 'number' &&
+    point.meanPrice !== 0
+      ? (
+          (
+            point.price -
+            point.meanPrice
+          ) /
+          point.meanPrice
+        ) * 100
+      : null
+
+  return (
+    <div className="qs-chart-tooltip">
+
+      <div className="qs-tooltip-heading">
+        <strong>
+          {symbol}
+        </strong>
+
+        <span>
+          {
+            point.date
+              ? new Date(
+                  point.date,
+                ).toLocaleDateString(
+                  undefined,
+                  {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  },
+                )
+              : ''
+          }
+        </span>
+      </div>
+
+
+      <div className="qs-tooltip-row">
+        <span>
+          Price
+        </span>
+
+        <strong>
+          {formatPrice(
+            point.price,
+          )}
+        </strong>
+      </div>
+
+
+      {typeof point.meanPrice ===
+        'number' && (
+        <div className="qs-tooltip-row">
+          <span>
+            Mean
+          </span>
+
+          <strong>
+            {formatPrice(
+              point.meanPrice,
+            )}
+          </strong>
+        </div>
+      )}
+
+
+      {differenceFromMean !==
+        null && (
+        <div className="qs-tooltip-row qs-tooltip-secondary">
+          <span>
+            vs Mean
+          </span>
+
+          <strong
+            className={
+              differenceFromMean >= 0
+                ? 'positive'
+                : 'negative'
+            }
+          >
+            {
+              differenceFromMean >= 0
+                ? '+'
+                : ''
+            }
+            {
+              differenceFromMean
+                .toFixed(2)
+            }%
+          </strong>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+
+function RsiTooltip({
+  active,
+  payload,
+  symbol,
+}: Omit<
+  MarketTooltipProps,
+  'formatPrice'
+>) {
+  if (
+    !active ||
+    !payload?.length
+  ) {
+    return null
+  }
+
+  const point =
+    payload[0]?.payload
+
+  const rsi =
+    point?.wilderRsi
+
+  if (
+    typeof rsi !== 'number'
+  ) {
+    return null
+  }
+
+  const state =
+    rsi >= 70
+      ? 'Overbought'
+      : rsi <= 30
+        ? 'Oversold'
+        : 'Neutral'
+
+  const stateClass =
+    rsi >= 70
+      ? 'overbought'
+      : rsi <= 30
+        ? 'oversold'
+        : 'neutral'
+
+  return (
+    <div className="qs-chart-tooltip">
+
+      <div className="qs-tooltip-heading">
+        <strong>
+          {symbol}
+        </strong>
+
+        <span>
+          {
+            point?.date
+              ? new Date(
+                  point.date,
+                ).toLocaleDateString(
+                  undefined,
+                  {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  },
+                )
+              : ''
+          }
+        </span>
+      </div>
+
+
+      <div className="qs-tooltip-row">
+        <span>
+          Wilder RSI
+        </span>
+
+        <strong className="qs-rsi-value">
+          {rsi.toFixed(2)}
+        </strong>
+      </div>
+
+
+      <div className="qs-tooltip-row">
+        <span>
+          State
+        </span>
+
+        <strong
+          className={`qs-rsi-state ${stateClass}`}
+        >
+          {state}
+        </strong>
+      </div>
+
+
+      <div className="qs-tooltip-rsi-scale">
+
+        <span className="oversold">
+          30 Oversold
+        </span>
+
+        <span>
+          50 Neutral
+        </span>
+
+        <span className="overbought">
+          70 Overbought
+        </span>
+
+      </div>
+
+    </div>
+  )
+}
+
+
 function MarketsPage() {
   const {
     preferences,
@@ -1528,7 +1782,29 @@ function MarketsPage() {
                     }}
                   />
 
-                  <Tooltip />
+                  <Tooltip
+                    cursor={{
+                      stroke:
+                        'var(--muted)',
+                      strokeWidth: 1,
+                      strokeDasharray:
+                        '4 4',
+                    }}
+                    content={props => (
+                      <PriceTooltip
+                        active={
+                          props.active
+                        }
+                        payload={
+                          props.payload as readonly ChartTooltipPayload[]
+                        }
+                        symbol={symbol}
+                        formatPrice={
+                          formatPrice
+                        }
+                      />
+                    )}
+                  />
 
                   <Line
                     type="monotone"
@@ -1621,7 +1897,26 @@ function MarketsPage() {
                     width={45}
                   />
 
-                  <Tooltip />
+                  <Tooltip
+                    cursor={{
+                      stroke:
+                        'var(--muted)',
+                      strokeWidth: 1,
+                      strokeDasharray:
+                        '4 4',
+                    }}
+                    content={props => (
+                      <RsiTooltip
+                        active={
+                          props.active
+                        }
+                        payload={
+                          props.payload as readonly ChartTooltipPayload[]
+                        }
+                        symbol={symbol}
+                      />
+                    )}
+                  />
 
                   <ReferenceLine
                     y={70}
