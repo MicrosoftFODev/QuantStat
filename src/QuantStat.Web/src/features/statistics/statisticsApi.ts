@@ -1,3 +1,11 @@
+﻿import {
+  currentProvider,
+} from '../../api/quantStatApi'
+
+import type {
+  MarketProvider,
+} from '../../api/quantStatApi'
+
 import type {
   StatisticsResponse,
 } from './statisticsModels'
@@ -11,9 +19,12 @@ export async function getStatistics(
   interval: number,
   periodDays: number,
   signal?: AbortSignal,
+  provider: MarketProvider =
+    currentProvider(),
 ): Promise<StatisticsResponse> {
   const query =
     new URLSearchParams({
+      provider,
       symbol,
       interval: interval.toString(),
       periodDays: periodDays.toString(),
@@ -38,12 +49,14 @@ export async function getStatistics(
       const body =
         await response.json()
 
-      if (body.error) {
-        message =
-          body.error
-      }
-    } catch {
-      // Keep default message.
+      message =
+        body.error ??
+        body.detail ??
+        body.title ??
+        message
+    }
+    catch {
+      // Keep default.
     }
 
     throw new Error(message)

@@ -18,8 +18,15 @@ import {
 } from 'react'
 
 import {
+  currentProvider,
+  defaultSymbolForProvider,
   getDashboard,
   getMarkets,
+  providerLabel,
+} from '../../api/quantStatApi'
+
+import type {
+  MarketProvider,
 } from '../../api/quantStatApi'
 
 import type {
@@ -55,6 +62,11 @@ function DashboardPage() {
     preferences,
   } =
     usePreferences()
+  const [provider, setProvider] =
+    useState<MarketProvider>(
+      () => currentProvider(),
+    )
+
   const [metadata, setMetadata] =
     useState<MarketMetadata | null>(
       null,
@@ -70,7 +82,10 @@ function DashboardPage() {
     () =>
       localStorage.getItem(
         'quantstat-symbol',
-      ) ?? 'ETHUSD',
+      ) ??
+      defaultSymbolForProvider(
+        currentProvider(),
+      ),
   )
 
   const [interval, setInterval] =
@@ -105,6 +120,11 @@ function DashboardPage() {
 
   useEffect(() => {
     localStorage.setItem(
+      'quantstat-provider',
+      provider,
+    )
+
+    localStorage.setItem(
       'quantstat-symbol',
       symbol,
     )
@@ -119,6 +139,7 @@ function DashboardPage() {
       periodDays.toString(),
     )
   }, [
+    provider,
     symbol,
     interval,
     periodDays,
@@ -129,6 +150,7 @@ function DashboardPage() {
 
     getMarkets(
       controller.signal,
+      provider,
     )
       .then(result => {
         setMetadata(result)
@@ -168,6 +190,7 @@ function DashboardPage() {
       controller.abort()
   }, [
     preferences.currency,
+    provider,
     symbol,
   ])
 
@@ -185,6 +208,7 @@ function DashboardPage() {
       interval,
       periodDays,
       controller.signal,
+      provider,
     )
       .then(setDashboard)
       .catch((reason: unknown) => {
@@ -210,6 +234,7 @@ function DashboardPage() {
     return () =>
       controller.abort()
   }, [
+    provider,
     symbol,
     interval,
     periodDays,
@@ -320,6 +345,56 @@ function DashboardPage() {
     symbol,
   ])
 
+  function changeProvider(
+    nextProvider: MarketProvider,
+  ): void {
+    if (nextProvider === provider) {
+      return
+    }
+
+    const nextSymbol =
+      defaultSymbolForProvider(
+        nextProvider,
+      )
+
+    setDashboard(null)
+    setMetadata(null)
+    setLoading(true)
+    setError(null)
+
+    setProvider(nextProvider)
+    setSymbol(nextSymbol)
+    setInterval(1440)
+
+    localStorage.setItem(
+      'quantstat-provider',
+      nextProvider,
+    )
+
+    localStorage.setItem(
+      'quantstat-symbol',
+      nextSymbol,
+    )
+
+    localStorage.setItem(
+      'quantstat-interval',
+      '1440',
+    )
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'quantstat-market-selection-changed',
+        {
+          detail: {
+            provider: nextProvider,
+            symbol: nextSymbol,
+          },
+        },
+      ),
+    )
+  }
+
+
   const chartData =
     useMemo(
       () =>
@@ -350,12 +425,38 @@ function DashboardPage() {
             Market overview and
             quantitative summary
           </p>
+
+          <small>
+            Data provider:{' '}
+            {providerLabel(provider)}
+          </small>
         </div>
 
       </section>
 
 
       <section className="filters">
+
+        <label>
+          Provider
+
+          <select
+            value={provider}
+            onChange={event =>
+              changeProvider(
+                event.target.value as MarketProvider,
+              )
+            }
+          >
+            <option value="kraken">
+              Kraken
+            </option>
+
+            <option value="coinbase">
+              Coinbase
+            </option>
+          </select>
+        </label>
 
         <label>
           Market
