@@ -10,7 +10,6 @@ import {
   Moon,
   Settings,
   Sun,
-  Upload,
 } from 'lucide-react'
 
 import {
@@ -48,11 +47,6 @@ const navigation = [
     label: 'statistics',
     path: '/statistics',
     icon: FlaskConical,
-  },
-  {
-    label: 'import',
-    path: '/import',
-    icon: Upload,
   },
   {
     label: 'dictionary',

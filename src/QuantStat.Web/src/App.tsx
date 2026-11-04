@@ -1,4 +1,3 @@
-import ImportPage from './features/import/ImportPage'
 import SettingsPage from './features/settings/SettingsPage'
 import DictionaryPage from './features/dictionary/DictionaryPage'
 import MarketsPage from './features/markets/MarketsPage'
@@ -72,14 +71,6 @@ function App() {
           path="/statistics"
           element={
             <StatisticsPage />
-          }
-        />
-
-
-        <Route
-          path="/import"
-          element={
-            <ImportPage />
           }
         />
 
