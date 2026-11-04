@@ -167,6 +167,8 @@ function readWatchlist():
 
 
 type ChartTooltipPayload = {
+  dataKey?: string
+  value?: number
   payload?: {
     date?: string
     price?: number
@@ -197,7 +199,14 @@ function PriceTooltip({
     return null
   }
 
+  const priceEntry =
+    payload.find(
+      item =>
+        item.dataKey === 'price',
+    )
+
   const point =
+    priceEntry?.payload ??
     payload[0]?.payload
 
   if (
@@ -1113,7 +1122,7 @@ const [
           </p>
 
           <small>
-            Alpaca Ãƒâ€šÃ‚Â· {
+            Alpaca ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {
               assetClassLabel(
                 assetClass,
               )
@@ -1883,7 +1892,7 @@ const [
                     ?.wilderRsi
                     ?.toFixed(2)
                   ??
-                  'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'
+                  'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â'
                 }
               </div>
 
