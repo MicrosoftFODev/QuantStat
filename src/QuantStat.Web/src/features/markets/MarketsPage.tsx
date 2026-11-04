@@ -1812,6 +1812,7 @@ function MarketsPage() {
                     stroke="#6c8cff"
                     strokeWidth={2.3}
                     dot={false}
+                    activeDot={false}
                     name="Price"
                   />
 
@@ -1822,6 +1823,7 @@ function MarketsPage() {
                     strokeWidth={1.5}
                     strokeDasharray="7 5"
                     dot={false}
+                    activeDot={false}
                     name="Mean"
                   />
 
@@ -1936,6 +1938,7 @@ function MarketsPage() {
                     stroke="#a78bfa"
                     strokeWidth={2}
                     dot={false}
+                    activeDot={false}
                     connectNulls={false}
                     name="Wilder RSI"
                   />
