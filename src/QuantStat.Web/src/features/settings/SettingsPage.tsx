@@ -3,7 +3,6 @@ import {
   Moon,
   Palette,
   Sun,
-  WalletCards,
 } from 'lucide-react'
 
 import {
@@ -17,7 +16,6 @@ import {
 
 import type {
   AppTheme,
-  QuoteCurrency,
 } from '../../preferences/PreferencesContext'
 
 
@@ -49,18 +47,6 @@ const themes:
   ]
 
 
-const currencies:
-  QuoteCurrency[] = [
-    'USD',
-    'EUR',
-    'GBP',
-    'USDT',
-    'USDC',
-    'BTC',
-    'ETH',
-  ]
-
-
 function SettingsPage() {
   const {
     accounts,
@@ -75,7 +61,6 @@ function SettingsPage() {
   const {
     preferences,
     setTheme,
-    setCurrency,
     translate,
   } =
     usePreferences()
@@ -169,63 +154,6 @@ function SettingsPage() {
 
         </article>
 
-
-        <article className="settings-card">
-
-          <div className="settings-card-heading">
-
-            <WalletCards size={20} />
-
-            <div>
-              <h2>
-                {translate(
-                  'currency',
-                )}
-              </h2>
-
-              <p>
-                {translate(
-                  'currencyHelp',
-                )}
-              </p>
-            </div>
-
-          </div>
-
-
-          <div className="settings-field">
-
-            <label>
-              {translate(
-                'currency',
-              )}
-
-              <select
-                value={
-                  preferences.currency
-                }
-                onChange={event =>
-                  setCurrency(
-                    event.target.value as QuoteCurrency
-                  )
-                }
-              >
-                {currencies.map(
-                  currency => (
-                    <option
-                      key={currency}
-                      value={currency}
-                    >
-                      {currency}
-                    </option>
-                  ),
-                )}
-              </select>
-            </label>
-
-          </div>
-
-        </article>
 
 
         <article className="settings-card account-settings-card">

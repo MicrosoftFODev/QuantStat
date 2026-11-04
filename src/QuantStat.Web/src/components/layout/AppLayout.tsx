@@ -73,7 +73,6 @@ function AppLayout() {
     )
 
   const {
-    preferences,
     effectiveTheme,
     setTheme,
     translate,
@@ -226,9 +225,7 @@ function AppLayout() {
 
           <div className="toolbar-actions">
 
-            <span className="toolbar-preference">
-              {preferences.currency}
-            </span>
+
 
             <button
               className="theme-button"

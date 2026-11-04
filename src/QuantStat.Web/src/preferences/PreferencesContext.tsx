@@ -21,19 +21,8 @@ export type AppTheme =
   | 'light'
   | 'system'
 
-export type QuoteCurrency =
-  | 'USD'
-  | 'EUR'
-  | 'GBP'
-  | 'USDT'
-  | 'USDC'
-  | 'BTC'
-  | 'ETH'
-
-
 export interface UserPreferences {
   theme: AppTheme
-  currency: QuoteCurrency
 }
 
 
@@ -41,7 +30,6 @@ interface PreferencesContextValue {
     preferences: UserPreferences
     effectiveTheme: 'dark' | 'light'
     setTheme: (theme: AppTheme) => void
-    setCurrency: (currency: QuoteCurrency) => void
     translate: (key: TranslationKey) => string
 }
 
@@ -49,7 +37,6 @@ interface PreferencesContextValue {
 const defaultPreferences:
   UserPreferences = {
     theme: 'dark',
-    currency: 'USD',
   }
 
 
@@ -77,9 +64,6 @@ const translations = {
     language: 'Language',
     english: 'English',
     greek: 'Greek',
-    currency: 'Preferred quote currency',
-    currencyHelp:
-      'Dashboard and Markets will show instruments quoted in this currency.',
     account: 'Microsoft account',
     savedAutomatically:
       'Preferences are saved automatically for this Microsoft account on this browser.',
@@ -99,47 +83,44 @@ const translations = {
   },
 
   el: {
-    dashboard: 'Πίνακας ελέγχου',
-    markets: 'Αγορές',
-    charts: 'Γραφήματα',
-    statistics: 'Στατιστικά',
-    dictionary: 'Λεξικό',
-    forecast: 'Πρόβλεψη',
-    settings: 'Ρυθμίσεις',
-    marketAnalytics: 'Ανάλυση αγορών',
-    developmentBuild: 'Έκδοση ανάπτυξης',
+    dashboard: 'Î Î¯Î½Î±ÎºÎ±Ï‚ ÎµÎ»Î­Î³Ï‡Î¿Ï…',
+    markets: 'Î‘Î³Î¿ÏÎ­Ï‚',
+    charts: 'Î“ÏÎ±Ï†Î®Î¼Î±Ï„Î±',
+    statistics: 'Î£Ï„Î±Ï„Î¹ÏƒÏ„Î¹ÎºÎ¬',
+    dictionary: 'Î›ÎµÎ¾Î¹ÎºÏŒ',
+    forecast: 'Î ÏÏŒÎ²Î»ÎµÏˆÎ·',
+    settings: 'Î¡Ï…Î¸Î¼Î¯ÏƒÎµÎ¹Ï‚',
+    marketAnalytics: 'Î‘Î½Î¬Î»Ï…ÏƒÎ· Î±Î³Î¿ÏÏŽÎ½',
+    developmentBuild: 'ÎˆÎºÎ´Î¿ÏƒÎ· Î±Î½Î¬Ï€Ï„Ï…Î¾Î·Ï‚',
     apiStatus: 'QuantStat API',
-    signOut: 'Αποσύνδεση',
-    preferences: 'Προτιμήσεις',
+    signOut: 'Î‘Ï€Î¿ÏƒÏÎ½Î´ÎµÏƒÎ·',
+    preferences: 'Î ÏÎ¿Ï„Î¹Î¼Î®ÏƒÎµÎ¹Ï‚',
     preferencesDescription:
-      'Προσαρμόστε το QuantStat για τον λογαριασμό Microsoft σας.',
-    appearance: 'Εμφάνιση',
-    theme: 'Θέμα',
-    dark: 'Σκούρο',
-    light: 'Φωτεινό',
-    system: 'Σύστημα',
-    language: 'Γλώσσα',
-    english: 'Αγγλικά',
-    greek: 'Ελληνικά',
-    currency: 'Προτιμώμενο νόμισμα αναφοράς',
-    currencyHelp:
-      'Ο Πίνακας ελέγχου και οι Αγορές θα εμφανίζουν ζεύγη με αυτό το νόμισμα.',
-    account: 'Λογαριασμός Microsoft',
+      'Î ÏÎ¿ÏƒÎ±ÏÎ¼ÏŒÏƒÏ„Îµ Ï„Î¿ QuantStat Î³Î¹Î± Ï„Î¿Î½ Î»Î¿Î³Î±ÏÎ¹Î±ÏƒÎ¼ÏŒ Microsoft ÏƒÎ±Ï‚.',
+    appearance: 'Î•Î¼Ï†Î¬Î½Î¹ÏƒÎ·',
+    theme: 'Î˜Î­Î¼Î±',
+    dark: 'Î£ÎºÎ¿ÏÏÎ¿',
+    light: 'Î¦Ï‰Ï„ÎµÎ¹Î½ÏŒ',
+    system: 'Î£ÏÏƒÏ„Î·Î¼Î±',
+    language: 'Î“Î»ÏŽÏƒÏƒÎ±',
+    english: 'Î‘Î³Î³Î»Î¹ÎºÎ¬',
+    greek: 'Î•Î»Î»Î·Î½Î¹ÎºÎ¬',
+    account: 'Î›Î¿Î³Î±ÏÎ¹Î±ÏƒÎ¼ÏŒÏ‚ Microsoft',
     savedAutomatically:
-      'Οι προτιμήσεις αποθηκεύονται αυτόματα για αυτόν τον λογαριασμό Microsoft σε αυτό το πρόγραμμα περιήγησης.',
-    dashboardTitle: 'Πίνακας ελέγχου',
+      'ÎŸÎ¹ Ï€ÏÎ¿Ï„Î¹Î¼Î®ÏƒÎµÎ¹Ï‚ Î±Ï€Î¿Î¸Î·ÎºÎµÏÎ¿Î½Ï„Î±Î¹ Î±Ï…Ï„ÏŒÎ¼Î±Ï„Î± Î³Î¹Î± Î±Ï…Ï„ÏŒÎ½ Ï„Î¿Î½ Î»Î¿Î³Î±ÏÎ¹Î±ÏƒÎ¼ÏŒ Microsoft ÏƒÎµ Î±Ï…Ï„ÏŒ Ï„Î¿ Ï€ÏÏŒÎ³ÏÎ±Î¼Î¼Î± Ï€ÎµÏÎ¹Î®Î³Î·ÏƒÎ·Ï‚.',
+    dashboardTitle: 'Î Î¯Î½Î±ÎºÎ±Ï‚ ÎµÎ»Î­Î³Ï‡Î¿Ï…',
     marketOverview:
-      'Επισκόπηση αγοράς και ποσοτική σύνοψη',
-    market: 'Αγορά',
-    interval: 'Χρονικό διάστημα',
-    period: 'Περίοδος',
-    latestPrice: 'Τελευταία τιμή',
-    priceChange: 'Μεταβολή τιμής',
-    observations: 'Παρατηρήσεις',
-    volatility: 'Ετησιοποιημένη μεταβλητότητα',
-    price: 'Τιμή',
-    mean: 'Μέσος όρος',
-    loadingMarketData: 'Φόρτωση δεδομένων αγοράς...',
+      'Î•Ï€Î¹ÏƒÎºÏŒÏ€Î·ÏƒÎ· Î±Î³Î¿ÏÎ¬Ï‚ ÎºÎ±Î¹ Ï€Î¿ÏƒÎ¿Ï„Î¹ÎºÎ® ÏƒÏÎ½Î¿ÏˆÎ·',
+    market: 'Î‘Î³Î¿ÏÎ¬',
+    interval: 'Î§ÏÎ¿Î½Î¹ÎºÏŒ Î´Î¹Î¬ÏƒÏ„Î·Î¼Î±',
+    period: 'Î ÎµÏÎ¯Î¿Î´Î¿Ï‚',
+    latestPrice: 'Î¤ÎµÎ»ÎµÏ…Ï„Î±Î¯Î± Ï„Î¹Î¼Î®',
+    priceChange: 'ÎœÎµÏ„Î±Î²Î¿Î»Î® Ï„Î¹Î¼Î®Ï‚',
+    observations: 'Î Î±ÏÎ±Ï„Î·ÏÎ®ÏƒÎµÎ¹Ï‚',
+    volatility: 'Î•Ï„Î·ÏƒÎ¹Î¿Ï€Î¿Î¹Î·Î¼Î­Î½Î· Î¼ÎµÏ„Î±Î²Î»Î·Ï„ÏŒÏ„Î·Ï„Î±',
+    price: 'Î¤Î¹Î¼Î®',
+    mean: 'ÎœÎ­ÏƒÎ¿Ï‚ ÏŒÏÎ¿Ï‚',
+    loadingMarketData: 'Î¦ÏŒÏÏ„Ï‰ÏƒÎ· Î´ÎµÎ´Î¿Î¼Î­Î½Ï‰Î½ Î±Î³Î¿ÏÎ¬Ï‚...',
   },
 } as const
 
@@ -185,16 +166,6 @@ function loadPreferences(
         parsed.theme === 'system'
           ? parsed.theme
           : 'dark',
-
-      currency:
-        parsed.currency === 'EUR' ||
-        parsed.currency === 'GBP' ||
-        parsed.currency === 'USDT' ||
-        parsed.currency === 'USDC' ||
-        parsed.currency === 'BTC' ||
-        parsed.currency === 'ETH'
-          ? parsed.currency
-          : 'USD',
     }
   }
   catch {
@@ -257,11 +228,6 @@ export function PreferencesProvider({
       JSON.stringify(
         preferences,
       ),
-    )
-
-    localStorage.setItem(
-      'quantstat-currency',
-      preferences.currency,
     )
 
     window.dispatchEvent(
@@ -336,32 +302,6 @@ export function PreferencesProvider({
                 theme,
               }),
             ),
-
-          setCurrency:
-              currency => {
-                  setPreferences(
-                      current => ({
-                          ...current,
-                          currency,
-                      }),
-                  )
-
-                  localStorage.removeItem(
-                      'quantstat-symbol',
-                  )
-
-                  window.dispatchEvent(
-                      new CustomEvent(
-                          'quantstat-market-selection-invalidated',
-                          {
-                              detail: {
-                                  currency,
-                              },
-                          },
-                      ),
-                  )
-              },
-
         translate:
           key =>
             translations.en[key],

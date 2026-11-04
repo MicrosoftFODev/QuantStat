@@ -1,7 +1,3 @@
-﻿import {
-  usePreferences,
-} from '../../preferences/PreferencesContext'
-
 import {
   ArrowDown,
   ArrowUp,
@@ -425,12 +421,7 @@ function RsiTooltip({
 
 
 function MarketsPage() {
-  const {
-    preferences,
-  } =
-    usePreferences()
-
-  const [
+const [
     assetClass,
     setAssetClass,
   ] =
@@ -793,7 +784,6 @@ function MarketsPage() {
 
   const currency =
     selectedMarket?.quoteAsset ??
-    preferences.currency ??
     'USD'
 
 
@@ -1123,7 +1113,7 @@ function MarketsPage() {
           </p>
 
           <small>
-            Alpaca Â· {
+            Alpaca Ãƒâ€šÃ‚Â· {
               assetClassLabel(
                 assetClass,
               )
@@ -1893,7 +1883,7 @@ function MarketsPage() {
                     ?.wilderRsi
                     ?.toFixed(2)
                   ??
-                  'â€”'
+                  'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'
                 }
               </div>
 
