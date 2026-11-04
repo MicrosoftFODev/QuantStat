@@ -84,16 +84,41 @@ function formatPercent(
 }
 
 
-function shortDate(
+function chartDate(
   value: string,
+  intervalMinutes: number,
 ): string {
-  return new Date(
-    value,
-  ).toLocaleDateString(
+  const date =
+    new Date(value)
+
+  if (intervalMinutes < 1440) {
+    return date.toLocaleString(
+      undefined,
+      {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+    )
+  }
+
+  if (intervalMinutes === 1440) {
+    return date.toLocaleDateString(
+      undefined,
+      {
+        month: 'short',
+        day: 'numeric',
+      },
+    )
+  }
+
+  return date.toLocaleDateString(
     undefined,
     {
       month: 'short',
       day: 'numeric',
+      year: '2-digit',
     },
   )
 }
@@ -565,6 +590,7 @@ function MarketsPage() {
     )
 
 
+
   useEffect(() => {
     localStorage.setItem(
       'quantstat-asset-class',
@@ -890,12 +916,16 @@ function MarketsPage() {
           point => ({
             ...point,
             chartDate:
-              shortDate(
+              chartDate(
                 point.date,
+                interval,
               ),
           }),
         ) ?? [],
-      [dashboard],
+      [
+        dashboard,
+        interval,
+      ],
     )
 
 
@@ -1965,4 +1995,8 @@ function MarketsPage() {
 
 
 export default MarketsPage
+
+
+
+
 
