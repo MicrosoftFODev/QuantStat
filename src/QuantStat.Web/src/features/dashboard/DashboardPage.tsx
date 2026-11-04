@@ -155,19 +155,62 @@ function DashboardPage() {
       .then(result => {
         setMetadata(result)
 
-        const ethereum =
-          result.markets.find(
+        const currencyMarkets =
+          result.markets.filter(
+            market =>
+              market.quoteAsset ===
+              preferences.currency,
+          )
+
+        const symbolIsValid =
+          currencyMarkets.some(
             market =>
               market.symbol ===
-              'ETHUSD',
+              symbol,
           )
 
         if (
-          !ethereum &&
-          result.markets.length > 0
+          !symbolIsValid &&
+          currencyMarkets.length > 0
         ) {
+          const preferredSymbol =
+            defaultSymbolForProvider(
+              provider,
+            )
+
+          const preferredMarket =
+            currencyMarkets.find(
+              market =>
+                market.symbol ===
+                preferredSymbol,
+            )
+
           setSymbol(
-            result.markets[0].symbol,
+            preferredMarket?.symbol ??
+            currencyMarkets[0].symbol,
+          )
+        }
+
+        const intervalIsValid =
+          result.intervals.some(
+            item =>
+              item.minutes ===
+              interval,
+          )
+
+        if (
+          !intervalIsValid &&
+          result.intervals.length > 0
+        ) {
+          const defaultInterval =
+            result.intervals.find(
+              item =>
+                item.isDefault,
+            ) ??
+            result.intervals[0]
+
+          setInterval(
+            defaultInterval.minutes,
           )
         }
       })
@@ -191,7 +234,6 @@ function DashboardPage() {
   }, [
     preferences.currency,
     provider,
-    symbol,
   ])
 
 
