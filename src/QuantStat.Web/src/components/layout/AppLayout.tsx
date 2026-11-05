@@ -59,11 +59,6 @@ const navigation = [
     icon: Dices,
   },
   {
-    label: 'simulation',
-    path: '/simulation',
-    icon: Dices,
-  },
-  {
     label: 'settings',
     path: '/settings',
     icon: Settings,
