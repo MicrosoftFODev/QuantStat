@@ -27,6 +27,9 @@ import StrategyComparison
 import TradeDetails
   from './TradeDetails'
 
+import SimulationSetup
+  from './SimulationSetup'
+
 import {
   buildEquityAnalytics,
   createSeed,
@@ -80,6 +83,71 @@ function readSelection(): SimulationSelection {
 }
 
 
+function displaySymbol(
+  symbol: string,
+): string {
+  const normalized =
+    symbol.trim()
+
+  if (
+    normalized.includes('/')
+  ) {
+    return normalized
+  }
+
+  const quotes = [
+    'USDT',
+    'USDC',
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'BTC',
+    'ETH',
+  ]
+
+  const quote =
+    quotes.find(
+      candidate =>
+        normalized.endsWith(
+          candidate,
+        ) &&
+        normalized.length >
+          candidate.length,
+    )
+
+  if (!quote) {
+    return normalized
+  }
+
+  return `${normalized.slice(
+    0,
+    -quote.length,
+  )}/${quote}`
+}
+
+
+function periodLabel(
+  days: number,
+): string {
+  const labels:
+    Record<number, string> = {
+      30: '30 Days',
+      90: '90 Days',
+      180: '180 Days',
+      365: '1 Year',
+      720: 'Maximum',
+    }
+
+  return (
+    labels[days] ??
+    `${days} Days`
+  )
+}
+
 function intervalLabel(
   minutes: number,
 ): string {
@@ -96,99 +164,11 @@ function intervalLabel(
       21600: '15 Days',
     }
 
-  return labels[minutes] ??
+  return (
+    labels[minutes] ??
     `${minutes} Minutes`
+  )
 }
-
-
-function periodLabel(
-  days: number,
-): string {
-  const labels:
-    Record<number, string> = {
-      30: '30 Days',
-      90: '90 Days',
-      180: '180 Days',
-      365: '1 Year',
-      720: 'Maximum',
-    }
-
-  return labels[days] ??
-    `${days} Days`
-}
-
-
-function displaySymbol(
-  symbol: string,
-): string {
-  const quotes = [
-    'USDT',
-    'USDC',
-    'USD',
-    'EUR',
-    'GBP',
-    'JPY',
-    'CAD',
-    'AUD',
-    'CHF',
-    'BTC',
-    'ETH',
-  ]
-
-  if (symbol.includes('/')) {
-    return symbol
-  }
-
-  const quote =
-    quotes.find(
-      candidate =>
-        symbol.endsWith(
-          candidate,
-        ) &&
-        symbol.length >
-          candidate.length,
-    )
-
-  if (!quote) {
-    return symbol
-  }
-
-  return `${symbol.slice(
-    0,
-    -quote.length,
-  )}/${quote}`
-}
-
-
-function formatCurrency(
-  value: number,
-): string {
-  return new Intl.NumberFormat(
-    'en-US',
-    {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    },
-  ).format(value)
-}
-
-
-function formatNumber(
-  value: number,
-  digits = 6,
-): string {
-  return new Intl.NumberFormat(
-    'en-US',
-    {
-      maximumFractionDigits:
-        digits,
-    },
-  ).format(value)
-}
-
-
-
 
 function SimulationPage() {
   const [
@@ -803,440 +783,101 @@ function SimulationPage() {
       )}
 
 
-      <section className="chart-card">
-        <div className="card-heading">
-          <div>
-            <h2>
-              Random purchase simulation
-            </h2>
-
-            <p>
-              Purchase times are sampled uniformly from distinct completed candles.
-            </p>
-          </div>
-        </div>
-
-
-        <div className="simulation-parameters">
-          <label className="simulation-field">
-            <span>
-              Amount per purchase
-            </span>
-
-            <input
-              type="number"
-              min="0.01"
-              step="10"
-              value={
-                amountPerPurchase
-              }
-              onChange={event => {
-                setAmountPerPurchase(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-
-                setSimulation(null)
-              }}
-            />
-
-            <small>
-              Capital allocated to each executed purchase.
-            </small>
-          </label>
-
-
-          <label className="simulation-field">
-            <span>
-              Number of purchases
-            </span>
-
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={
-                numberOfPurchases
-              }
-              onChange={event => {
-                setNumberOfPurchases(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-
-                setSimulation(null)
-              }}
-            />
-
-            <small>
-              Requested number of distinct random purchase events.
-            </small>
-          </label>
-
-
-          <label className="simulation-field">
-            <span>
-              RSI type
-            </span>
-
-            <select
-              value={rsiType}
-              onChange={event => {
-                setRsiType(
-                  event.target.value as
-                    | 'wilder'
-                    | 'cutler'
-                    | 'exponential',
-                )
-
-                setSimulation(null)
-              }}
-            >
-              <option value="wilder">
-                Wilder RSI
-              </option>
-
-              <option value="cutler">
-                Cutler RSI
-              </option>
-
-              <option value="exponential">
-                Exponential RSI
-              </option>
-            </select>
-
-            <small>
-              Momentum indicator used by the RSI strategy.
-            </small>
-          </label>
-
-
-          <label className="simulation-field">
-            <span>
-              RSI period
-            </span>
-
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={rsiPeriod}
-              onChange={event => {
-                setRsiPeriod(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-
-                setSimulation(null)
-              }}
-            />
-
-            <small>
-              Lookback period calculated by QuantStat.Core.
-            </small>
-          </label>
-
-
-          <label className="simulation-field">
-            <span>
-              RSI buy threshold
-            </span>
-
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              value={rsiThreshold}
-              onChange={event => {
-                setRsiThreshold(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-
-                setSimulation(null)
-              }}
-            />
-
-            <small>
-              Buy signal when RSI is below this level.
-            </small>
-          </label>
-
-          <label className="simulation-field">
-            <span>
-              Random seed
-            </span>
-
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={seed}
-              onChange={event => {
-                setSeed(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-
-                setSimulation(null)
-              }}
-            />
-
-            <small>
-              The same seed reproduces the same random purchase times.
-            </small>
-          </label>
-
-
-          <div className="simulation-budget">
-            <span>
-              Starting budget
-            </span>
-
-            <strong>
-              {formatCurrency(
-                startingBudget,
-              )}
-            </strong>
-
-            <small>
-              Amount per purchase multiplied by requested purchases
-            </small>
-          </div>
-
-
-          <div className="simulation-budget">
-            <span>
-              Available candles
-            </span>
-
-            <strong>
-              {loading
-                ? '...'
-                : availableObservations}
-            </strong>
-
-            <small>
-              Valid completed observations available for sampling
-            </small>
-          </div>
-
-
-          <div className="simulation-budget">
-            <span>
-              Sampling method
-            </span>
-
-            <strong>
-              Uniform
-            </strong>
-
-            <small>
-              Without replacement across completed candles
-            </small>
-          </div>
-        </div>
-
-
-        {!parametersValid && (
-          <div className="error-banner">
-            Enter a positive purchase amount, a whole number of purchases and a non-negative whole-number seed.
-          </div>
-        )}
-
-
-        {purchaseWarning && (
-          <div className="simulation-warning">
-            {purchaseWarning}
-          </div>
-        )}
-
-
-        <div className="simulation-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={
-              handleNewSeed
-            }
-          >
-            Generate New Seed
-          </button>
-
-          <button
-            type="button"
-            className="secondary-button"
-            disabled={
-              loading ||
-              !dashboard ||
-              !parametersValid
-            }
-            onClick={
-              handleRunNew
-            }
-          >
-            Run with New Seed
-          </button>
-
-          <button
-            type="button"
-            className="primary-button"
-            disabled={
-              loading ||
-              !dashboard ||
-              !parametersValid
-            }
-            onClick={
-              handleRun
-            }
-          >
-            {
-              loading
-                ? 'Loading Data...'
-                : 'Run Simulation'
-            }
-          </button>
-        </div>
-      </section>
-
-
+      <SimulationSetup
+        amountPerPurchase={
+          amountPerPurchase
+        }
+        numberOfPurchases={
+          numberOfPurchases
+        }
+        startingBudget={
+          startingBudget
+        }
+        rsiType={
+          rsiType
+        }
+        rsiPeriod={
+          rsiPeriod
+        }
+        rsiThreshold={
+          rsiThreshold
+        }
+        seed={
+          seed
+        }
+        availableObservations={
+          availableObservations
+        }
+        loading={
+          loading
+        }
+        parametersValid={
+          parametersValid &&
+          dashboard !== null
+        }
+        purchaseWarning={
+          purchaseWarning
+        }
+        onAmountChange={
+          value => {
+            setAmountPerPurchase(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onPurchasesChange={
+          value => {
+            setNumberOfPurchases(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onRsiTypeChange={
+          value => {
+            setRsiType(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onRsiPeriodChange={
+          value => {
+            setRsiPeriod(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onRsiThresholdChange={
+          value => {
+            setRsiThreshold(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onSeedChange={
+          value => {
+            setSeed(
+              value,
+            )
+            setSimulation(null)
+          }
+        }
+        onGenerateSeed={
+          handleNewSeed
+        }
+        onRunNewSeed={
+          handleRunNew
+        }
+        onRun={
+          handleRun
+        }
+      />
       {simulation && (
         <>
-          <section className="simulation-results-grid">
-            <article className="simulation-result-card">
-              <span>
-                Final wealth
-              </span>
-
-              <strong>
-                {formatCurrency(
-                  simulation.finalWealth,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                PnL
-              </span>
-
-              <strong
-                className={
-                  simulation.pnl >= 0
-                    ? 'positive-value'
-                    : 'negative-value'
-                }
-              >
-                {formatCurrency(
-                  simulation.pnl,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Total return
-              </span>
-
-              <strong
-                className={
-                  simulation.returnPercent >=
-                  0
-                    ? 'positive-value'
-                    : 'negative-value'
-                }
-              >
-                {formatNumber(
-                  simulation.returnPercent,
-                  2,
-                )}
-                %
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Average entry
-              </span>
-
-              <strong>
-                {formatCurrency(
-                  simulation.averageEntryPrice,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Final market price
-              </span>
-
-              <strong>
-                {formatCurrency(
-                  simulation.finalPrice,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Executed purchases
-              </span>
-
-              <strong>
-                {
-                  simulation.executedPurchases
-                }
-                {' / '}
-                {
-                  simulation.requestedPurchases
-                }
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Invested capital
-              </span>
-
-              <strong>
-                {formatCurrency(
-                  simulation.investedCapital,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Unused cash
-              </span>
-
-              <strong>
-                {formatCurrency(
-                  simulation.unusedCash,
-                )}
-              </strong>
-            </article>
-
-            <article className="simulation-result-card">
-              <span>
-                Total quantity
-              </span>
-
-              <strong>
-                {formatNumber(
-                  simulation.totalQuantity,
-                  8,
-                )}
-              </strong>
-            </article>
-          </section>
 
 
           {
