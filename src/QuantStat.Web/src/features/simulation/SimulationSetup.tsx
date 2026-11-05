@@ -1,4 +1,4 @@
-﻿interface SimulationSetupProps {
+interface SimulationSetupProps {
   amountPerPurchase: number
   numberOfPurchases: number
   startingBudget: number
@@ -321,7 +321,7 @@ function SimulationSetup({
                 className="secondary-button"
                 onClick={onGenerateSeed}
               >
-                New Seed
+                Regenerate Seed
               </button>
 
               <button
@@ -333,7 +333,7 @@ function SimulationSetup({
                 }
                 onClick={onRunNewSeed}
               >
-                Run New Seed
+                Run New Random Sample
               </button>
             </div>
           </div>
