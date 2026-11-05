@@ -1,84 +1,125 @@
-import {
-    InteractionStatus,
+﻿import {
+  InteractionStatus,
 } from '@azure/msal-browser'
 
 import {
-    useIsAuthenticated,
-    useMsal,
+  useIsAuthenticated,
+  useMsal,
 } from '@azure/msal-react'
 
-import {
-    useEffect,
-} from 'react'
-
-import {
-    loginRequest,
-} from './msalConfig'
-
 import type {
-    PropsWithChildren,
+  PropsWithChildren,
 } from 'react'
+
+import {
+  useQuantStatAuth,
+} from './AuthContext'
+
+import GoogleSignInButton
+  from './GoogleSignInButton'
+
+import {
+  loginRequest,
+} from './msalConfig'
 
 
 function AuthGate({
-    children,
+  children,
 }: PropsWithChildren) {
-    const isAuthenticated =
-        useIsAuthenticated()
+  const microsoftAuthenticated =
+    useIsAuthenticated()
 
-    const {
-        instance,
-        inProgress,
-    } =
-        useMsal()
+  const {
+    googleUser,
+  } =
+    useQuantStatAuth()
 
-
-    useEffect(() => {
-        if (
-            !isAuthenticated &&
-            inProgress ===
-            InteractionStatus.None
-        ) {
-            void instance.loginRedirect(
-                loginRequest,
-            )
-        }
-    }, [
-        isAuthenticated,
-        inProgress,
-        instance,
-    ])
+  const {
+    instance,
+    inProgress,
+  } =
+    useMsal()
 
 
-    if (isAuthenticated) {
-        return (
-            <>
-            { children }
-            </>
-        )
-    }
-
-
+  if (
+    microsoftAuthenticated ||
+    googleUser
+  ) {
     return (
-        <main className= "auth-page" >
+      <>
+        {children}
+      </>
+    )
+  }
 
-        <section className="auth-card" >
 
-            <div className="auth-logo" >
-                QS
-                </div>
+  const microsoftLoading =
+    inProgress !==
+    InteractionStatus.None
 
-                <h1>
-    QuantStat
+
+  return (
+    <main className="auth-page">
+      <section className="auth-card auth-provider-card">
+        <div className="auth-logo">
+          QS
+        </div>
+
+        <h1>
+          QuantStat
         </h1>
 
-        <p>
-    Signing in with your Microsoft account...
-    </p>
+        <p className="auth-introduction">
+          Sign in to continue to your quantitative market workspace.
+        </p>
 
-        </section>
+        <div className="auth-provider-actions">
+          <button
+            type="button"
+            className="microsoft-sign-in-button"
+            disabled={
+              microsoftLoading
+            }
+            onClick={() =>
+              void instance
+                .loginRedirect(
+                  loginRequest,
+                )
+            }
+          >
+            <span
+              className="microsoft-mark"
+              aria-hidden="true"
+            >
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
 
-        </main>
+            <span>
+              {
+                microsoftLoading
+                  ? 'Opening Microsoft...'
+                  : 'Continue with Microsoft'
+              }
+            </span>
+          </button>
+
+          <div className="auth-divider">
+            <span>
+              or
+            </span>
+          </div>
+
+          <GoogleSignInButton />
+        </div>
+
+        <small className="auth-privacy-note">
+          QuantStat requests only basic identity information for sign-in.
+        </small>
+      </section>
+    </main>
   )
 }
 

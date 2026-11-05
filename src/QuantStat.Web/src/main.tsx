@@ -16,6 +16,7 @@ import {
 
 import App from './App.tsx'
 import AuthGate from './auth/AuthGate'
+
 import {
   msalInstance,
 } from './auth/msalConfig'

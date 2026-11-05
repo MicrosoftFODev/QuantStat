@@ -5007,3 +5007,149 @@ strong.negative {
     width: 100%;
   }
 }
+
+/* Microsoft and Google authentication */
+
+.auth-provider-card {
+  width: min(
+    420px,
+    calc(100vw - 32px)
+  );
+  padding: 34px;
+  text-align: center;
+}
+
+.auth-introduction {
+  max-width: 320px;
+  margin: 8px auto 26px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.auth-provider-actions {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.microsoft-sign-in-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 300px;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1f1f1f;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.microsoft-sign-in-button:hover:not(:disabled) {
+  background: #f8f9fa;
+  box-shadow:
+    0 1px 3px
+    rgba(60, 64, 67, 0.2);
+}
+
+.microsoft-sign-in-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.microsoft-mark {
+  display: grid;
+  grid-template-columns:
+    7px 7px;
+  grid-template-rows:
+    7px 7px;
+  gap: 1px;
+}
+
+.microsoft-mark i:nth-child(1) {
+  background: #f25022;
+}
+
+.microsoft-mark i:nth-child(2) {
+  background: #7fba00;
+}
+
+.microsoft-mark i:nth-child(3) {
+  background: #00a4ef;
+}
+
+.microsoft-mark i:nth-child(4) {
+  background: #ffb900;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 300px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.google-auth-control {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.google-sign-in-button {
+  width: 300px;
+  min-height: 40px;
+}
+
+.google-auth-status {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.auth-error {
+  width: 300px;
+  color: #ef4444;
+  font-size: 0.74rem;
+  text-align: left;
+}
+
+.auth-privacy-note {
+  display: block;
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+@media (max-width: 420px) {
+  .auth-provider-card {
+    padding: 28px 18px;
+  }
+
+  .microsoft-sign-in-button,
+  .auth-divider,
+  .google-sign-in-button,
+  .auth-error {
+    width: 100%;
+    max-width: 300px;
+  }
+}
