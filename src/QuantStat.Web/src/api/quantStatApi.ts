@@ -111,6 +111,7 @@ export function getDashboard(
   assetClass:
     AssetClass =
       currentAssetClass(),
+  rsiPeriod?: number,
 ): Promise<DashboardResult> {
   const query =
     new URLSearchParams({
@@ -121,6 +122,15 @@ export function getDashboard(
       periodDays:
         periodDays.toString(),
     })
+
+  if (
+    rsiPeriod !== undefined
+  ) {
+    query.set(
+      'rsiPeriod',
+      rsiPeriod.toString(),
+    )
+  }
 
   return request<DashboardResult>(
     `/api/dashboard?${query.toString()}`,

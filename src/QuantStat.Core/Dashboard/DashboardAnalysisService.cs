@@ -1,4 +1,4 @@
-﻿using QuantStat.Core.Dashboard.Models;
+using QuantStat.Core.Dashboard.Models;
 using QuantStat.Core.Indicators;
 using QuantStat.Core.Markets.Models;
 using QuantStat.Core.Statistics;
@@ -21,13 +21,21 @@ public sealed class DashboardAnalysisService
         string symbol,
         int intervalMinutes,
         int periodDays,
-        IReadOnlyList<MarketCandle> candles)
+        IReadOnlyList<MarketCandle> candles,
+        int rsiPeriod = 14)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(
             symbol);
 
         ArgumentNullException.ThrowIfNull(
             candles);
+
+        if (rsiPeriod <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(rsiPeriod),
+                "RSI period must be greater than zero.");
+        }
 
         if (candles.Count < 5)
         {
@@ -68,22 +76,22 @@ public sealed class DashboardAnalysisService
         double?[] wilderRsi =
             RsiCalculator.Wilder(
                 prices,
-                14);
+                rsiPeriod);
 
         double?[] cutlerRsi =
             RsiCalculator.Cutler(
                 prices,
-                14);
+                rsiPeriod);
 
         double?[] exponentialRsi =
             RsiCalculator.Exponential(
                 prices,
-                14);
+                rsiPeriod);
 
         double?[] stochasticRsi =
             RsiCalculator.Stochastic(
                 prices,
-                14,
+                rsiPeriod,
                 14);
 
         double?[] connorsRsi =

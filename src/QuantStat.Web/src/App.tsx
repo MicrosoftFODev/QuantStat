@@ -1,4 +1,4 @@
-﻿import SettingsPage
+import SettingsPage
   from './features/settings/SettingsPage'
 
 import DictionaryPage
@@ -15,6 +15,9 @@ import StatisticsPage
 
 import PlaceholderPage
   from './pages/PlaceholderPage'
+
+import SimulationPage
+  from './features/simulation/SimulationPage'
 
 import AppLayout
   from './components/layout/AppLayout'
@@ -101,6 +104,13 @@ function App() {
         />
 
 
+
+        <Route
+          path="/simulation"
+          element={
+            <SimulationPage />
+          }
+        />
         <Route
           path="/settings"
           element={

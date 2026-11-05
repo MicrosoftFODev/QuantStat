@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChartNoAxesCombined,
   Database,
+  Dices,
   FlaskConical,
   LogOut,
   Moon,
@@ -51,6 +52,16 @@ const navigation = [
     label: 'forecast',
     path: '/forecast',
     icon: Activity,
+  },
+  {
+    label: 'simulation',
+    path: '/simulation',
+    icon: Dices,
+  },
+  {
+    label: 'simulation',
+    path: '/simulation',
+    icon: Dices,
   },
   {
     label: 'settings',
