@@ -1,4 +1,4 @@
-﻿using QuantStat.Api.Providers.Alpaca;
+using QuantStat.Api.Providers.Alpaca;
 using QuantStat.Core.Abstractions;
 using QuantStat.Core.Dashboard;
 using QuantStat.Core.Markets.Models;
@@ -127,7 +127,8 @@ builder.Services.AddCors(
                     .WithOrigins(
                         "http://localhost:5173",
                         "https://localhost:5173",
-                        "https://glittering-pegasus-87a130.netlify.app")
+                        "https://glittering-pegasus-87a130.netlify.app",
+                        "https://quantstat.zoisantonopoulos.workers.dev")
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
