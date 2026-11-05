@@ -16,6 +16,7 @@ import {
 
 import App from './App.tsx'
 import AuthGate from './auth/AuthGate'
+import { AuthProvider } from './auth/AuthContext'
 
 import {
   msalInstance,
@@ -55,27 +56,23 @@ async function startApplication():
     }
   }
 
-  createRoot(
-    document.getElementById(
-      'root',
-    )!,
-  ).render(
-    <StrictMode>
-      <MsalProvider
-        instance={
-          msalInstance
-        }
-      >
+    createRoot(
+        document.getElementById('root')!,
+    ).render(
+        <StrictMode>
+        <MsalProvider instance={ msalInstance } >
+        <AuthProvider>
         <AuthGate>
-          <PreferencesProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </PreferencesProvider>
+        <PreferencesProvider>
+        <BrowserRouter>
+        <App />
+        </BrowserRouter>
+        </PreferencesProvider>
         </AuthGate>
-      </MsalProvider>
+        </AuthProvider>
+        </MsalProvider>
     </StrictMode>,
-  )
+    )
 }
 
 
