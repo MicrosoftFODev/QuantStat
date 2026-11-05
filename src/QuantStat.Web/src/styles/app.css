@@ -4481,3 +4481,173 @@ strong.negative {
     width: 100%;
   }
 }
+
+/* Compact Simulation strategy comparison */
+
+.strategy-panel {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.strategy-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.strategy-panel-header h2 {
+  margin: 3px 0 3px;
+  font-size: 1.05rem;
+}
+
+.strategy-panel-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.simulation-eyebrow {
+  color: #6c8cff;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.strategy-best {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+.strategy-best span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.strategy-best strong {
+  font-size: 0.92rem;
+}
+
+.strategy-best small {
+  color: #22c55e;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.strategy-table-wrap {
+  overflow-x: auto;
+}
+
+.strategy-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.strategy-table th,
+.strategy-table td {
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.strategy-table th {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.strategy-table th:first-child,
+.strategy-table td:first-child {
+  text-align: left;
+}
+
+.strategy-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.strategy-table tbody tr {
+  transition:
+    background 120ms ease;
+}
+
+.strategy-table tbody tr:hover {
+  background: rgba(108, 140, 255, 0.045);
+}
+
+.strategy-row-best {
+  background: rgba(108, 140, 255, 0.055);
+}
+
+.strategy-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.strategy-name-cell > div {
+  display: grid;
+  gap: 1px;
+}
+
+.strategy-name-cell strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.strategy-name-cell small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.strategy-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+}
+
+.strategy-best-badge {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border: 1px solid rgba(108, 140, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(108, 140, 255, 0.08);
+  color: #6c8cff;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.strategy-value-strong {
+  font-weight: 750;
+}
+
+@media (max-width: 700px) {
+  .strategy-panel-header {
+    align-items: flex-start;
+    padding: 15px;
+  }
+
+  .strategy-best {
+    display: none;
+  }
+
+  .strategy-table th,
+  .strategy-table td {
+    padding: 10px 12px;
+  }
+}

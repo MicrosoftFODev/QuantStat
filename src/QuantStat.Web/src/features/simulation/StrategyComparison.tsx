@@ -25,9 +25,10 @@ interface StrategyComparisonProps {
 }
 
 
-interface StrategyCardProps {
+interface StrategyRow {
   name: string
-  subtitle: string
+  detail: string
+  color: string
   result: SimulationResult
   analytics: EquityAnalytics
 }
@@ -47,106 +48,34 @@ function formatCurrency(
 }
 
 
-function formatPercent(
+function formatSignedCurrency(
   value: number,
 ): string {
-  return `${value.toFixed(2)}%`
+  const formatted =
+    formatCurrency(
+      Math.abs(value),
+    )
+
+  if (value > 0) {
+    return `+${formatted}`
+  }
+
+  if (value < 0) {
+    return `-${formatted}`
+  }
+
+  return formatted
 }
 
 
-function StrategyCard({
-  name,
-  subtitle,
-  result,
-  analytics,
-}: StrategyCardProps) {
-  return (
-    <article className="strategy-comparison-card">
-      <div className="strategy-comparison-heading">
-        <span>
-          {name}
-        </span>
+function formatSignedPercent(
+  value: number,
+): string {
+  if (value > 0) {
+    return `+${value.toFixed(2)}%`
+  }
 
-        <strong>
-          {subtitle}
-        </strong>
-      </div>
-
-      <dl>
-        <div>
-          <dt>
-            Final Wealth
-          </dt>
-
-          <dd>
-            {formatCurrency(
-              result.finalWealth,
-            )}
-          </dd>
-        </div>
-
-        <div>
-          <dt>
-            PnL
-          </dt>
-
-          <dd
-            className={
-              result.pnl >= 0
-                ? 'positive-value'
-                : 'negative-value'
-            }
-          >
-            {formatCurrency(
-              result.pnl,
-            )}
-          </dd>
-        </div>
-
-        <div>
-          <dt>
-            Return
-          </dt>
-
-          <dd
-            className={
-              result.returnPercent >= 0
-                ? 'positive-value'
-                : 'negative-value'
-            }
-          >
-            {formatPercent(
-              result.returnPercent,
-            )}
-          </dd>
-        </div>
-
-        <div>
-          <dt>
-            Max Drawdown
-          </dt>
-
-          <dd className="negative-value">
-            {formatPercent(
-              analytics.maxDrawdownPercent,
-            )}
-          </dd>
-        </div>
-
-        <div>
-          <dt>
-            Capital Deployed
-          </dt>
-
-          <dd>
-            {formatPercent(
-              analytics.capitalUtilizationPercent,
-            )}
-          </dd>
-        </div>
-      </dl>
-    </article>
-  )
+  return `${value.toFixed(2)}%`
 }
 
 
@@ -164,52 +93,78 @@ function StrategyComparison({
   winnerName,
   winnerDifference,
 }: StrategyComparisonProps) {
+  const strategies:
+    StrategyRow[] = [
+      {
+        name:
+          'Random Timing',
+        detail:
+          `Seed ${random.seed}`,
+        color:
+          '#6c8cff',
+        result:
+          random,
+        analytics:
+          randomAnalytics,
+      },
+      {
+        name:
+          'Regular DCA',
+        detail:
+          'Even spacing',
+        color:
+          '#22c55e',
+        result:
+          dca,
+        analytics:
+          dcaAnalytics,
+      },
+      {
+        name:
+          rsiLabel,
+        detail:
+          `Period ${rsiPeriod}`,
+        color:
+          '#a78bfa',
+        result:
+          rsi,
+        analytics:
+          rsiAnalytics,
+      },
+      {
+        name:
+          'Lump Sum / Buy & Hold',
+        detail:
+          'Full initial investment',
+        color:
+          '#f59e0b',
+        result:
+          lumpSum,
+        analytics:
+          lumpSumAnalytics,
+      },
+    ]
+
   return (
-    <section className="chart-card">
-      <div className="card-heading">
+    <section className="strategy-panel">
+      <div className="strategy-panel-header">
         <div>
+          <span className="simulation-eyebrow">
+            Historical strategies
+          </span>
+
           <h2>
-            Strategy benchmark comparison
+            Strategy comparison
           </h2>
 
           <p>
-            Same starting capital and terminal valuation date across strategies.
+            Same starting capital and terminal valuation date.
           </p>
         </div>
-      </div>
 
-      <div className="strategy-comparison-grid">
-        <StrategyCard
-          name="Random Timing"
-          subtitle={`Seed ${random.seed}`}
-          result={random}
-          analytics={randomAnalytics}
-        />
-
-        <StrategyCard
-          name="Regular DCA"
-          subtitle="Even spacing"
-          result={dca}
-          analytics={dcaAnalytics}
-        />
-
-        <StrategyCard
-          name={rsiLabel}
-          subtitle={`Period ${rsiPeriod}`}
-          result={rsi}
-          analytics={rsiAnalytics}
-        />
-
-        <StrategyCard
-          name="Lump Sum / Buy & Hold"
-          subtitle="Full initial investment"
-          result={lumpSum}
-          analytics={lumpSumAnalytics}
-        />
-
-        <article className="strategy-winner-card">
+        <div className="strategy-best">
           <span>
-            Best historical result
+            Best historical
           </span>
 
           <strong>
@@ -217,15 +172,158 @@ function StrategyComparison({
           </strong>
 
           <small>
-            Advantage over second place
-          </small>
-
-          <b>
-            {formatCurrency(
+            +{formatCurrency(
               winnerDifference,
+            )}{' '}
+            vs second
+          </small>
+        </div>
+      </div>
+
+
+      <div className="strategy-table-wrap">
+        <table className="strategy-table">
+          <thead>
+            <tr>
+              <th>
+                Strategy
+              </th>
+
+              <th>
+                Wealth
+              </th>
+
+              <th>
+                PnL
+              </th>
+
+              <th>
+                Return
+              </th>
+
+              <th>
+                Max DD
+              </th>
+
+              <th>
+                Deployed
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {strategies.map(
+              strategy => {
+                const isWinner =
+                  strategy.name ===
+                  winnerName
+
+                return (
+                  <tr
+                    key={
+                      strategy.name
+                    }
+                    className={
+                      isWinner
+                        ? 'strategy-row-best'
+                        : undefined
+                    }
+                  >
+                    <td>
+                      <div className="strategy-name-cell">
+                        <span
+                          className="strategy-dot"
+                          style={{
+                            backgroundColor:
+                              strategy.color,
+                          }}
+                        />
+
+                        <div>
+                          <strong>
+                            {
+                              strategy.name
+                            }
+                          </strong>
+
+                          <small>
+                            {
+                              strategy.detail
+                            }
+                          </small>
+                        </div>
+
+                        {isWinner && (
+                          <span className="strategy-best-badge">
+                            Best
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="strategy-value-strong">
+                      {formatCurrency(
+                        strategy.result
+                          .finalWealth,
+                      )}
+                    </td>
+
+                    <td
+                      className={
+                        strategy.result
+                          .pnl >= 0
+                          ? 'positive-value'
+                          : 'negative-value'
+                      }
+                    >
+                      {formatSignedCurrency(
+                        strategy.result.pnl,
+                      )}
+                    </td>
+
+                    <td
+                      className={
+                        strategy.result
+                          .returnPercent >= 0
+                          ? 'positive-value'
+                          : 'negative-value'
+                      }
+                    >
+                      {formatSignedPercent(
+                        strategy.result
+                          .returnPercent,
+                      )}
+                    </td>
+
+                    <td
+                      className={
+                        strategy.analytics
+                          .maxDrawdownPercent <
+                        0
+                          ? 'negative-value'
+                          : undefined
+                      }
+                    >
+                      {formatSignedPercent(
+                        strategy.analytics
+                          .maxDrawdownPercent,
+                      )}
+                    </td>
+
+                    <td>
+                      {
+                        strategy.analytics
+                          .capitalUtilizationPercent
+                          .toFixed(1)
+                      }
+                      %
+                    </td>
+                  </tr>
+                )
+              },
             )}
-          </b>
-        </article>
+          </tbody>
+        </table>
       </div>
     </section>
   )
