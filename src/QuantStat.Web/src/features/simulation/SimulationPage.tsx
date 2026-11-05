@@ -13,47 +13,33 @@ import type {
 } from '../../models/market'
 
 
-type AssetClass =
-  | 'stock'
-  | 'crypto'
+import type {
+  SimulationResult,
+  SimulationSelection,
+} from './simulationTypes'
+
+import WealthChart
+  from './WealthChart'
+
+import StrategyComparison
+  from './StrategyComparison'
+
+import TradeDetails
+  from './TradeDetails'
+
+import {
+  buildEquityAnalytics,
+  createSeed,
+  rsiTypeLabel,
+  runDcaSimulation,
+  runLumpSumSimulation,
+  runRandomSimulation,
+  runRsiSimulation,
+} from './simulationEngine'
 
 
-interface SimulationSelection {
-  assetClass: AssetClass
-  symbol: string
-  interval: number
-  periodDays: number
-}
 
 
-interface SimulationTrade {
-  index: number
-  date: string
-  price: number
-  amount: number
-  quantity: number
-  signalDate?: string
-  signalValue?: number
-}
-
-
-interface SimulationResult {
-  seed: number
-  requestedPurchases: number
-  executedPurchases: number
-  amountPerPurchase: number
-  startingBudget: number
-  investedCapital: number
-  unusedCash: number
-  totalQuantity: number
-  averageEntryPrice: number
-  finalPrice: number
-  holdingsValue: number
-  finalWealth: number
-  pnl: number
-  returnPercent: number
-  trades: SimulationTrade[]
-}
 
 
 function readSelection(): SimulationSelection {
@@ -202,722 +188,7 @@ function formatNumber(
 }
 
 
-function formatDate(
-  value: string,
-): string {
-  return new Date(
-    value,
-  ).toLocaleString(
-    undefined,
-    {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    },
-  )
-}
 
-
-function createSeed(): number {
-  return Math.floor(
-    Math.random() *
-      2_147_483_647,
-  )
-}
-
-
-function createRandom(
-  seed: number,
-): () => number {
-  let state =
-    seed >>> 0
-
-
-  return () => {
-    state +=
-      0x6d2b79f5
-
-    let value =
-      state
-
-    value =
-      Math.imul(
-        value ^
-          value >>> 15,
-        value | 1,
-      )
-
-    value ^=
-      value +
-      Math.imul(
-        value ^
-          value >>> 7,
-        value | 61,
-      )
-
-    return (
-      (
-        value ^
-        value >>> 14
-      ) >>> 0
-    ) /
-      4_294_967_296
-  }
-}
-
-
-function sampleIndexes(
-  availableCount: number,
-  requestedCount: number,
-  seed: number,
-): number[] {
-  const indexes =
-    Array.from(
-      {
-        length:
-          availableCount,
-      },
-      (_, index) =>
-        index,
-    )
-
-  const random =
-    createRandom(seed)
-
-  for (
-    let i =
-      indexes.length - 1;
-    i > 0;
-    i--
-  ) {
-    const j =
-      Math.floor(
-        random() *
-          (i + 1),
-      )
-
-    const current =
-      indexes[i]
-
-    indexes[i] =
-      indexes[j]
-
-    indexes[j] =
-      current
-  }
-
-  return indexes
-    .slice(
-      0,
-      Math.min(
-        requestedCount,
-        availableCount,
-      ),
-    )
-    .sort(
-      (left, right) =>
-        left - right,
-    )
-}
-
-
-function runRandomSimulation(
-  dashboard: DashboardResult,
-  amountPerPurchase: number,
-  requestedPurchases: number,
-  seed: number,
-): SimulationResult {
-  const eligiblePoints =
-    dashboard.points.filter(
-      point =>
-        Number.isFinite(
-          point.price,
-        ) &&
-        point.price > 0,
-    )
-
-  if (
-    eligiblePoints.length === 0
-  ) {
-    throw new Error(
-      'No valid completed market candles are available for simulation.',
-    )
-  }
-
-  const selectedIndexes =
-    sampleIndexes(
-      eligiblePoints.length,
-      requestedPurchases,
-      seed,
-    )
-
-  const trades =
-    selectedIndexes.map(
-      index => {
-        const point =
-          eligiblePoints[index]
-
-        return {
-          index,
-          date:
-            point.date,
-          price:
-            point.price,
-          amount:
-            amountPerPurchase,
-          quantity:
-            amountPerPurchase /
-            point.price,
-        }
-      },
-    )
-
-  const executedPurchases =
-    trades.length
-
-  const startingBudget =
-    amountPerPurchase *
-    requestedPurchases
-
-  const investedCapital =
-    amountPerPurchase *
-    executedPurchases
-
-  const unusedCash =
-    startingBudget -
-    investedCapital
-
-  const totalQuantity =
-    trades.reduce(
-      (
-        total,
-        trade,
-      ) =>
-        total +
-        trade.quantity,
-      0,
-    )
-
-  const finalPrice =
-    eligiblePoints[
-      eligiblePoints.length - 1
-    ].price
-
-  const holdingsValue =
-    totalQuantity *
-    finalPrice
-
-  const finalWealth =
-    holdingsValue +
-    unusedCash
-
-  const pnl =
-    finalWealth -
-    startingBudget
-
-  const returnPercent =
-    startingBudget === 0
-      ? 0
-      : pnl /
-        startingBudget *
-        100
-
-  const averageEntryPrice =
-    totalQuantity === 0
-      ? 0
-      : investedCapital /
-        totalQuantity
-
-  return {
-    seed,
-    requestedPurchases,
-    executedPurchases,
-    amountPerPurchase,
-    startingBudget,
-    investedCapital,
-    unusedCash,
-    totalQuantity,
-    averageEntryPrice,
-    finalPrice,
-    holdingsValue,
-    finalWealth,
-    pnl,
-    returnPercent,
-    trades,
-  }
-}
-
-
-
-function runDcaSimulation(
-  dashboard: DashboardResult,
-  amountPerPurchase: number,
-  requestedPurchases: number,
-): SimulationResult {
-  const eligiblePoints =
-    dashboard.points.filter(
-      point =>
-        Number.isFinite(
-          point.price,
-        ) &&
-        point.price > 0,
-    )
-
-  if (
-    eligiblePoints.length === 0
-  ) {
-    throw new Error(
-      'No valid completed market candles are available for DCA.',
-    )
-  }
-
-  const executedPurchases =
-    Math.min(
-      requestedPurchases,
-      eligiblePoints.length,
-    )
-
-  const selectedIndexes:
-    number[] = []
-
-  if (
-    executedPurchases === 1
-  ) {
-    selectedIndexes.push(0)
-  }
-  else {
-    const lastIndex =
-      eligiblePoints.length - 1
-
-    for (
-      let position = 0;
-      position <
-        executedPurchases;
-      position++
-    ) {
-      const index =
-        Math.round(
-          position *
-          lastIndex /
-          (
-            executedPurchases -
-            1
-          ),
-        )
-
-      selectedIndexes.push(
-        index,
-      )
-    }
-  }
-
-  const trades =
-    selectedIndexes.map(
-      index => {
-        const point =
-          eligiblePoints[index]
-
-        return {
-          index,
-          date:
-            point.date,
-          price:
-            point.price,
-          amount:
-            amountPerPurchase,
-          quantity:
-            amountPerPurchase /
-            point.price,
-        }
-      },
-    )
-
-  const startingBudget =
-    amountPerPurchase *
-    requestedPurchases
-
-  const investedCapital =
-    amountPerPurchase *
-    executedPurchases
-
-  const unusedCash =
-    startingBudget -
-    investedCapital
-
-  const totalQuantity =
-    trades.reduce(
-      (
-        total,
-        trade,
-      ) =>
-        total +
-        trade.quantity,
-      0,
-    )
-
-  const finalPrice =
-    eligiblePoints[
-      eligiblePoints.length - 1
-    ].price
-
-  const holdingsValue =
-    totalQuantity *
-    finalPrice
-
-  const finalWealth =
-    holdingsValue +
-    unusedCash
-
-  const pnl =
-    finalWealth -
-    startingBudget
-
-  const returnPercent =
-    startingBudget === 0
-      ? 0
-      : pnl /
-        startingBudget *
-        100
-
-  const averageEntryPrice =
-    totalQuantity === 0
-      ? 0
-      : investedCapital /
-        totalQuantity
-
-  return {
-    seed: 0,
-    requestedPurchases,
-    executedPurchases,
-    amountPerPurchase,
-    startingBudget,
-    investedCapital,
-    unusedCash,
-    totalQuantity,
-    averageEntryPrice,
-    finalPrice,
-    holdingsValue,
-    finalWealth,
-    pnl,
-    returnPercent,
-    trades,
-  }
-}
-
-
-
-type SimulationRsiType =
-  | 'wilder'
-  | 'cutler'
-  | 'exponential'
-
-
-function rsiValue(
-  point: DashboardResult['points'][number],
-  rsiType: SimulationRsiType,
-): number | null {
-  switch (rsiType) {
-    case 'cutler':
-      return point.cutlerRsi
-
-    case 'exponential':
-      return point.exponentialRsi
-
-    case 'wilder':
-    default:
-      return point.wilderRsi
-  }
-}
-
-
-function rsiTypeLabel(
-  rsiType: SimulationRsiType,
-): string {
-  switch (rsiType) {
-    case 'cutler':
-      return 'Cutler RSI'
-
-    case 'exponential':
-      return 'Exponential RSI'
-
-    case 'wilder':
-    default:
-      return 'Wilder RSI'
-  }
-}
-
-
-function runRsiSimulation(
-  dashboard: DashboardResult,
-  amountPerPurchase: number,
-  requestedPurchases: number,
-  rsiType: SimulationRsiType,
-  rsiThreshold: number,
-): SimulationResult {
-  const points =
-    dashboard.points
-
-  if (points.length < 2) {
-    throw new Error(
-      'At least two completed candles are required for the RSI strategy.',
-    )
-  }
-
-  const trades:
-    SimulationTrade[] = []
-
-  for (
-    let signalIndex = 0;
-    signalIndex <
-      points.length - 1;
-    signalIndex++
-  ) {
-    if (
-      trades.length >=
-      requestedPurchases
-    ) {
-      break
-    }
-
-    const signalPoint =
-      points[signalIndex]
-
-    const signalRsi =
-      rsiValue(
-        signalPoint,
-        rsiType,
-      )
-
-    if (
-      signalRsi === null ||
-      !Number.isFinite(
-        signalRsi,
-      ) ||
-      signalRsi >=
-        rsiThreshold
-    ) {
-      continue
-    }
-
-    const executionIndex =
-      signalIndex + 1
-
-    const executionPoint =
-      points[executionIndex]
-
-    if (
-      !Number.isFinite(
-        executionPoint.price,
-      ) ||
-      executionPoint.price <= 0
-    ) {
-      continue
-    }
-
-    trades.push({
-      index:
-        executionIndex,
-      signalDate:
-        signalPoint.date,
-      date:
-        executionPoint.date,
-      signalValue:
-        signalRsi,
-      price:
-        executionPoint.price,
-      amount:
-        amountPerPurchase,
-      quantity:
-        amountPerPurchase /
-        executionPoint.price,
-    })
-  }
-
-  const startingBudget =
-    amountPerPurchase *
-    requestedPurchases
-
-  const executedPurchases =
-    trades.length
-
-  const investedCapital =
-    amountPerPurchase *
-    executedPurchases
-
-  const unusedCash =
-    startingBudget -
-    investedCapital
-
-  const totalQuantity =
-    trades.reduce(
-      (
-        total,
-        trade,
-      ) =>
-        total +
-        trade.quantity,
-      0,
-    )
-
-  const finalPoint =
-    [...points]
-      .reverse()
-      .find(
-        point =>
-          Number.isFinite(
-            point.price,
-          ) &&
-          point.price > 0,
-      )
-
-  if (!finalPoint) {
-    throw new Error(
-      'No valid final market price is available for the RSI strategy.',
-    )
-  }
-
-  const finalPrice =
-    finalPoint.price
-
-  const holdingsValue =
-    totalQuantity *
-    finalPrice
-
-  const finalWealth =
-    holdingsValue +
-    unusedCash
-
-  const pnl =
-    finalWealth -
-    startingBudget
-
-  const returnPercent =
-    startingBudget === 0
-      ? 0
-      : pnl /
-        startingBudget *
-        100
-
-  const averageEntryPrice =
-    totalQuantity === 0
-      ? 0
-      : investedCapital /
-        totalQuantity
-
-  return {
-    seed: 0,
-    requestedPurchases,
-    executedPurchases,
-    amountPerPurchase,
-    startingBudget,
-    investedCapital,
-    unusedCash,
-    totalQuantity,
-    averageEntryPrice,
-    finalPrice,
-    holdingsValue,
-    finalWealth,
-    pnl,
-    returnPercent,
-    trades,
-  }
-}
-
-function runLumpSumSimulation(
-  dashboard: DashboardResult,
-  amountPerPurchase: number,
-  requestedPurchases: number,
-): SimulationResult {
-  const eligiblePoints =
-    dashboard.points.filter(
-      point =>
-        Number.isFinite(
-          point.price,
-        ) &&
-        point.price > 0,
-    )
-
-  if (
-    eligiblePoints.length === 0
-  ) {
-    throw new Error(
-      'No valid completed market candles are available for the lump-sum benchmark.',
-    )
-  }
-
-  const startingBudget =
-    amountPerPurchase *
-    requestedPurchases
-
-  const entryPoint =
-    eligiblePoints[0]
-
-  const finalPoint =
-    eligiblePoints[
-      eligiblePoints.length - 1
-    ]
-
-  const totalQuantity =
-    startingBudget /
-    entryPoint.price
-
-  const holdingsValue =
-    totalQuantity *
-    finalPoint.price
-
-  const finalWealth =
-    holdingsValue
-
-  const pnl =
-    finalWealth -
-    startingBudget
-
-  const returnPercent =
-    startingBudget === 0
-      ? 0
-      : pnl /
-        startingBudget *
-        100
-
-  const trades:
-    SimulationTrade[] = [
-      {
-        index: 0,
-        date:
-          entryPoint.date,
-        price:
-          entryPoint.price,
-        amount:
-          startingBudget,
-        quantity:
-          totalQuantity,
-      },
-    ]
-
-  return {
-    seed: 0,
-    requestedPurchases: 1,
-    executedPurchases: 1,
-    amountPerPurchase:
-      startingBudget,
-    startingBudget,
-    investedCapital:
-      startingBudget,
-    unusedCash: 0,
-    totalQuantity,
-    averageEntryPrice:
-      entryPoint.price,
-    finalPrice:
-      finalPoint.price,
-    holdingsValue,
-    finalWealth,
-    pnl,
-    returnPercent,
-    trades,
-  }
-}
 
 function SimulationPage() {
   const [
@@ -1318,6 +589,77 @@ function SimulationPage() {
       }
     }
 
+
+  const randomAnalytics =
+    useMemo(
+      () =>
+        dashboard &&
+        simulation
+          ? buildEquityAnalytics(
+              dashboard,
+              simulation.trades,
+              simulation.startingBudget,
+            )
+          : null,
+      [
+        dashboard,
+        simulation,
+      ],
+    )
+
+
+  const dcaAnalytics =
+    useMemo(
+      () =>
+        dashboard &&
+        dcaSimulation
+          ? buildEquityAnalytics(
+              dashboard,
+              dcaSimulation.trades,
+              dcaSimulation.startingBudget,
+            )
+          : null,
+      [
+        dashboard,
+        dcaSimulation,
+      ],
+    )
+
+
+  const rsiAnalytics =
+    useMemo(
+      () =>
+        dashboard &&
+        rsiSimulation
+          ? buildEquityAnalytics(
+              dashboard,
+              rsiSimulation.trades,
+              rsiSimulation.startingBudget,
+            )
+          : null,
+      [
+        dashboard,
+        rsiSimulation,
+      ],
+    )
+
+
+  const lumpSumAnalytics =
+    useMemo(
+      () =>
+        dashboard &&
+        lumpSumSimulation
+          ? buildEquityAnalytics(
+              dashboard,
+              lumpSumSimulation.trades,
+              lumpSumSimulation.startingBudget,
+            )
+          : null,
+      [
+        dashboard,
+        lumpSumSimulation,
+      ],
+    )
 
   const benchmarkWinner =
     useMemo(
@@ -1897,722 +1239,99 @@ function SimulationPage() {
           </section>
 
 
-          {dcaSimulation && (
-            <>
-              <section className="chart-card">
-                <div className="card-heading">
-                  <div>
-                    <h2>
-                      Strategy benchmark comparison
-                    </h2>
+          {
+            dcaSimulation &&
+            rsiSimulation &&
+            lumpSumSimulation &&
+            randomAnalytics &&
+            dcaAnalytics &&
+            rsiAnalytics &&
+            lumpSumAnalytics && (
+              <>
+                <StrategyComparison
+                  random={
+                    simulation
+                  }
+                  randomAnalytics={
+                    randomAnalytics
+                  }
+                  dca={
+                    dcaSimulation
+                  }
+                  dcaAnalytics={
+                    dcaAnalytics
+                  }
+                  rsi={
+                    rsiSimulation
+                  }
+                  rsiAnalytics={
+                    rsiAnalytics
+                  }
+                  lumpSum={
+                    lumpSumSimulation
+                  }
+                  lumpSumAnalytics={
+                    lumpSumAnalytics
+                  }
+                  rsiLabel={
+                    `${rsiTypeLabel(rsiType)} < ${rsiThreshold}`
+                  }
+                  rsiPeriod={
+                    rsiPeriod
+                  }
+                  winnerName={
+                    benchmarkWinner?.winner.name ??
+                    '-'
+                  }
+                  winnerDifference={
+                    benchmarkWinner?.difference ??
+                    0
+                  }
+                />
+
+                <TradeDetails
+                  random={
+                    simulation
+                  }
+                  dca={
+                    dcaSimulation
+                  }
+                  rsi={
+                    rsiSimulation
+                  }
+                  rsiLabel={
+                    `${rsiTypeLabel(rsiType)}, period ${rsiPeriod}, below ${rsiThreshold}`
+                  }
+                />
+              </>
+            )
+          }
+
+
+      {
+        randomAnalytics &&
+        dcaAnalytics &&
+        rsiAnalytics &&
+        lumpSumAnalytics && (
+          <WealthChart
+            random={
+              randomAnalytics
+            }
+            dca={
+              dcaAnalytics
+            }
+            rsi={
+              rsiAnalytics
+            }
+            lumpSum={
+              lumpSumAnalytics
+            }
+          />
+        )
+      }
 
-                    <p>
-                      Strategies use the same starting capital and terminal valuation price.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="strategy-comparison-grid">
-                  <article className="strategy-comparison-card">
-                    <div className="strategy-comparison-heading">
-                      <span>
-                        Random timing
-                      </span>
-
-                      <strong>
-                        Seed {simulation.seed}
-                      </strong>
-                    </div>
-
-                    <dl>
-                      <div>
-                        <dt>
-                          Final wealth
-                        </dt>
-
-                        <dd>
-                          {formatCurrency(
-                            simulation.finalWealth,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          PnL
-                        </dt>
-
-                        <dd
-                          className={
-                            simulation.pnl >= 0
-                              ? 'positive-value'
-                              : 'negative-value'
-                          }
-                        >
-                          {formatCurrency(
-                            simulation.pnl,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Return
-                        </dt>
-
-                        <dd
-                          className={
-                            simulation.returnPercent >= 0
-                              ? 'positive-value'
-                              : 'negative-value'
-                          }
-                        >
-                          {formatNumber(
-                            simulation.returnPercent,
-                            2,
-                          )}
-                          %
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Average entry
-                        </dt>
-
-                        <dd>
-                          {formatCurrency(
-                            simulation.averageEntryPrice,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Purchases
-                        </dt>
-
-                        <dd>
-                          {simulation.executedPurchases}
-                          {' / '}
-                          {simulation.requestedPurchases}
-                        </dd>
-                      </div>
-                    </dl>
-                  </article>
-
-                  <article className="strategy-comparison-card">
-                    <div className="strategy-comparison-heading">
-                      <span>
-                        Regular DCA
-                      </span>
-
-                      <strong>
-                        Even spacing
-                      </strong>
-                    </div>
-
-                    <dl>
-                      <div>
-                        <dt>
-                          Final wealth
-                        </dt>
-
-                        <dd>
-                          {formatCurrency(
-                            dcaSimulation.finalWealth,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          PnL
-                        </dt>
-
-                        <dd
-                          className={
-                            dcaSimulation.pnl >= 0
-                              ? 'positive-value'
-                              : 'negative-value'
-                          }
-                        >
-                          {formatCurrency(
-                            dcaSimulation.pnl,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Return
-                        </dt>
-
-                        <dd
-                          className={
-                            dcaSimulation.returnPercent >= 0
-                              ? 'positive-value'
-                              : 'negative-value'
-                          }
-                        >
-                          {formatNumber(
-                            dcaSimulation.returnPercent,
-                            2,
-                          )}
-                          %
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Average entry
-                        </dt>
-
-                        <dd>
-                          {formatCurrency(
-                            dcaSimulation.averageEntryPrice,
-                          )}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt>
-                          Purchases
-                        </dt>
-
-                        <dd>
-                          {dcaSimulation.executedPurchases}
-                          {' / '}
-                          {dcaSimulation.requestedPurchases}
-                        </dd>
-                      </div>
-                    </dl>
-                  </article>
-
-                  {lumpSumSimulation && (
-                    <article className="strategy-comparison-card">
-                      <div className="strategy-comparison-heading">
-                        <span>
-                          Lump Sum / Buy & Hold
-                        </span>
-
-                        <strong>
-                          Full initial investment
-                        </strong>
-                      </div>
-
-                      <dl>
-                        <div>
-                          <dt>
-                            Final wealth
-                          </dt>
-
-                          <dd>
-                            {formatCurrency(
-                              lumpSumSimulation.finalWealth,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            PnL
-                          </dt>
-
-                          <dd
-                            className={
-                              lumpSumSimulation.pnl >= 0
-                                ? 'positive-value'
-                                : 'negative-value'
-                            }
-                          >
-                            {formatCurrency(
-                              lumpSumSimulation.pnl,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Return
-                          </dt>
-
-                          <dd
-                            className={
-                              lumpSumSimulation.returnPercent >= 0
-                                ? 'positive-value'
-                                : 'negative-value'
-                            }
-                          >
-                            {formatNumber(
-                              lumpSumSimulation.returnPercent,
-                              2,
-                            )}
-                            %
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Entry price
-                          </dt>
-
-                          <dd>
-                            {formatCurrency(
-                              lumpSumSimulation.averageEntryPrice,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Invested immediately
-                          </dt>
-
-                          <dd>
-                            {formatCurrency(
-                              lumpSumSimulation.investedCapital,
-                            )}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                  )}
-                  {rsiSimulation && (
-                    <article className="strategy-comparison-card">
-                      <div className="strategy-comparison-heading">
-                        <span>
-                          {rsiTypeLabel(rsiType)}
-                          {' < '}
-                          {rsiThreshold}
-                        </span>
-
-                        <strong>
-                          Period {rsiPeriod}
-                        </strong>
-                      </div>
-
-                      <dl>
-                        <div>
-                          <dt>
-                            Final wealth
-                          </dt>
-
-                          <dd>
-                            {formatCurrency(
-                              rsiSimulation.finalWealth,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            PnL
-                          </dt>
-
-                          <dd
-                            className={
-                              rsiSimulation.pnl >= 0
-                                ? 'positive-value'
-                                : 'negative-value'
-                            }
-                          >
-                            {formatCurrency(
-                              rsiSimulation.pnl,
-                            )}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Return
-                          </dt>
-
-                          <dd
-                            className={
-                              rsiSimulation.returnPercent >= 0
-                                ? 'positive-value'
-                                : 'negative-value'
-                            }
-                          >
-                            {formatNumber(
-                              rsiSimulation.returnPercent,
-                              2,
-                            )}
-                            %
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Average entry
-                          </dt>
-
-                          <dd>
-                            {
-                              rsiSimulation.executedPurchases > 0
-                                ? formatCurrency(
-                                    rsiSimulation.averageEntryPrice,
-                                  )
-                                : '-'
-                            }
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Purchases
-                          </dt>
-
-                          <dd>
-                            {rsiSimulation.executedPurchases}
-                            {' / '}
-                            {rsiSimulation.requestedPurchases}
-                          </dd>
-                        </div>
-
-                        <div>
-                          <dt>
-                            Unused cash
-                          </dt>
-
-                          <dd>
-                            {formatCurrency(
-                              rsiSimulation.unusedCash,
-                            )}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                  )}
-                  <article className="strategy-winner-card">
-                    <span>
-                      Better terminal result
-                    </span>
-
-                    <strong>
-                      {
-                        benchmarkWinner?.winner.name ??
-                        '-'
-                      }
-                    </strong>
-
-                    <small>
-                      Advantage over second place
-                    </small>
-
-                    <b>
-                      {formatCurrency(
-                        benchmarkWinner?.difference ??
-                        0,
-                      )}
-                    </b>
-                  </article>
-                </div>
-              </section>
-
-              {rsiSimulation && (
-                <section className="chart-card">
-                  <div className="card-heading">
-                    <div>
-                      <h2>
-                        RSI strategy purchases
-                      </h2>
-
-                      <p>
-                        {rsiTypeLabel(rsiType)}, period {rsiPeriod}, signal below {rsiThreshold}. Signals execute on the next completed candle.
-                      </p>
-                    </div>
-                  </div>
-
-                  {rsiSimulation.executedPurchases === 0 ? (
-                    <div className="simulation-warning">
-                      No eligible RSI signals could be executed for this market period and threshold.
-                    </div>
-                  ) : (
-                    <div className="simulation-table-wrapper">
-                      <table className="simulation-table">
-                        <thead>
-                          <tr>
-                            <th>
-                              #
-                            </th>
-
-                            <th>
-                              Signal date
-                            </th>
-
-                            <th>
-                              Execution date
-                            </th>
-
-                            <th>
-                              RSI
-                            </th>
-
-                            <th>
-                              Execution price
-                            </th>
-
-                            <th>
-                              Amount
-                            </th>
-
-                            <th>
-                              Quantity
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {rsiSimulation.trades.map(
-                            (
-                              trade,
-                              position,
-                            ) => (
-                              <tr
-                                key={
-                                  `rsi-${trade.date}-${trade.index}`
-                                }
-                              >
-                                <td>
-                                  {position + 1}
-                                </td>
-
-                                <td>
-                                  {
-                                    trade.signalDate
-                                      ? formatDate(
-                                          trade.signalDate,
-                                        )
-                                      : '-'
-                                  }
-                                </td>
-
-                                <td>
-                                  {formatDate(
-                                    trade.date,
-                                  )}
-                                </td>
-
-                                <td>
-                                  {
-                                    trade.signalValue !== undefined
-                                      ? formatNumber(
-                                          trade.signalValue,
-                                          2,
-                                        )
-                                      : '-'
-                                  }
-                                </td>
-
-                                <td>
-                                  {formatCurrency(
-                                    trade.price,
-                                  )}
-                                </td>
-
-                                <td>
-                                  {formatCurrency(
-                                    trade.amount,
-                                  )}
-                                </td>
-
-                                <td>
-                                  {formatNumber(
-                                    trade.quantity,
-                                    8,
-                                  )}
-                                </td>
-                              </tr>
-                            ),
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              )}
-              <section className="chart-card">
-                <div className="card-heading">
-                  <div>
-                    <h2>
-                      Regular DCA purchases
-                    </h2>
-
-                    <p>
-                      Purchases are distributed as evenly as possible across the selected completed candles.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="simulation-table-wrapper">
-                  <table className="simulation-table">
-                    <thead>
-                      <tr>
-                        <th>
-                          #
-                        </th>
-
-                        <th>
-                          Date
-                        </th>
-
-                        <th>
-                          Price
-                        </th>
-
-                        <th>
-                          Amount
-                        </th>
-
-                        <th>
-                          Quantity
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {dcaSimulation.trades.map(
-                        (
-                          trade,
-                          position,
-                        ) => (
-                          <tr
-                            key={
-                              `dca-${trade.date}-${trade.index}`
-                            }
-                          >
-                            <td>
-                              {position + 1}
-                            </td>
-
-                            <td>
-                              {formatDate(
-                                trade.date,
-                              )}
-                            </td>
-
-                            <td>
-                              {formatCurrency(
-                                trade.price,
-                              )}
-                            </td>
-
-                            <td>
-                              {formatCurrency(
-                                trade.amount,
-                              )}
-                            </td>
-
-                            <td>
-                              {formatNumber(
-                                trade.quantity,
-                                8,
-                              )}
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            </>
-          )}
-
-          <section className="chart-card">
-            <div className="card-heading">
-              <div>
-                <h2>
-                  Random purchases
-                </h2>
-
-                <p>
-                  Seed {simulation.seed} produced {simulation.executedPurchases} distinct purchase times.
-                </p>
-              </div>
-            </div>
-
-
-            <div className="simulation-table-wrapper">
-              <table className="simulation-table">
-                <thead>
-                  <tr>
-                    <th>
-                      #
-                    </th>
-
-                    <th>
-                      Date
-                    </th>
-
-                    <th>
-                      Price
-                    </th>
-
-                    <th>
-                      Amount
-                    </th>
-
-                    <th>
-                      Quantity
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {simulation.trades.map(
-                    (
-                      trade,
-                      position,
-                    ) => (
-                      <tr
-                        key={
-                          `${trade.date}-${trade.index}`
-                        }
-                      >
-                        <td>
-                          {
-                            position +
-                            1
-                          }
-                        </td>
-
-                        <td>
-                          {formatDate(
-                            trade.date,
-                          )}
-                        </td>
-
-                        <td>
-                          {formatCurrency(
-                            trade.price,
-                          )}
-                        </td>
-
-                        <td>
-                          {formatCurrency(
-                            trade.amount,
-                          )}
-                        </td>
-
-                        <td>
-                          {formatNumber(
-                            trade.quantity,
-                            8,
-                          )}
-                        </td>
-                      </tr>
-                    ),
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </>
       )}
-
 
       <section className="simulation-disclaimer">
         Historical simulation only. Results depend on the selected market period and do not represent a forecast or investment recommendation.

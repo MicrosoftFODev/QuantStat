@@ -4451,3 +4451,33 @@ strong.negative {
   color: var(--text);
   font: inherit;
 }
+
+.simulation-trade-control .card-heading {
+  align-items: center;
+}
+
+.simulation-trade-control button {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.simulation-trade-control button:hover {
+  border-color: #6c8cff;
+}
+
+@media (max-width: 700px) {
+  .simulation-trade-control .card-heading {
+    align-items: stretch;
+  }
+
+  .simulation-trade-control button {
+    width: 100%;
+  }
+}
