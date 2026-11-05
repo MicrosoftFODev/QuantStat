@@ -1,3 +1,4 @@
+using QuantStat.Api.Auth;
 using QuantStat.Api.Providers.Alpaca;
 using QuantStat.Core.Abstractions;
 using QuantStat.Core.Dashboard;
@@ -140,6 +141,9 @@ var app =
 
 app.UseCors(
     "QuantStatWeb");
+
+
+app.MapGoogleAuthEndpoints();
 
 
 app.MapGet(
