@@ -26,16 +26,36 @@ function FeatureShowcase() {
         </p>
       </div>
 
-      <div className="research-flow">
-        <span>MARKET DATA</span>
+      <div className="quantstat-workflow">
+        <div className="workflow-step">
+          <span>01</span>
+          <strong>EXPLORE</strong>
+          <small>Markets</small>
+        </div>
+
         <i />
-        <span>STATISTICS</span>
+
+        <div className="workflow-step">
+          <span>02</span>
+          <strong>ANALYZE</strong>
+          <small>Statistics</small>
+        </div>
+
         <i />
-        <span>EXPERIMENT</span>
+
+        <div className="workflow-step">
+          <span>03</span>
+          <strong>TEST</strong>
+          <small>Simulation</small>
+        </div>
+
         <i />
-        <span>UNCERTAINTY</span>
-        <i />
-        <span>INSIGHT</span>
+
+        <div className="workflow-step">
+          <span>04</span>
+          <strong>INTERPRET</strong>
+          <small>Insight</small>
+        </div>
       </div>
 
       <div className="feature-grid">

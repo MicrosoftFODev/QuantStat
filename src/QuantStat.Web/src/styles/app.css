@@ -13608,3 +13608,223 @@ iframe {
   }
 }
 
+
+/* ============================================================
+   QuantStat Research Workflow
+   ============================================================ */
+
+.quantstat-workflow {
+  display: grid;
+
+  grid-template-columns:
+    1fr auto
+    1fr auto
+    1fr auto
+    1fr;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin:
+    42px
+    0
+    48px;
+
+  padding:
+    20px
+    24px;
+
+  border:
+    1px solid
+    rgba(51, 65, 85, 0.55);
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.38),
+      rgba(2, 6, 23, 0.18)
+    );
+}
+
+.workflow-step {
+  display: grid;
+
+  grid-template-columns:
+    auto 1fr;
+
+  grid-template-areas:
+    "number title"
+    "number detail";
+
+  column-gap: 12px;
+
+  align-items: center;
+
+  min-width: 0;
+}
+
+.workflow-step > span {
+  grid-area: number;
+
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+
+  border:
+    1px solid
+    rgba(56, 189, 248, 0.22);
+
+  border-radius: 10px;
+
+  color: #38bdf8;
+
+  background:
+    rgba(14, 165, 233, 0.06);
+
+  font-size: 0.58rem;
+  font-weight: 700;
+
+  font-variant-numeric:
+    tabular-nums;
+}
+
+.workflow-step > strong {
+  grid-area: title;
+
+  color: #cbd5e1;
+
+  font-size: 0.69rem;
+  font-weight: 700;
+
+  letter-spacing: 0.1em;
+}
+
+.workflow-step > small {
+  grid-area: detail;
+
+  margin-top: 3px;
+
+  color: #64748b;
+
+  font-size: 0.62rem;
+}
+
+
+/* Connectors */
+
+.quantstat-workflow > i {
+  position: relative;
+
+  display: block;
+
+  width: 52px;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.12),
+      rgba(56, 189, 248, 0.55),
+      rgba(129, 140, 248, 0.18)
+    );
+}
+
+.quantstat-workflow > i::after {
+  content: "";
+
+  position: absolute;
+
+  top: -2px;
+  right: 0;
+
+  width: 5px;
+  height: 5px;
+
+  border-top:
+    1px solid #38bdf8;
+
+  border-right:
+    1px solid #38bdf8;
+
+  transform:
+    rotate(45deg);
+
+  opacity: 0.65;
+}
+
+
+/* Subtle hover */
+
+.workflow-step {
+  transition:
+    transform 180ms ease;
+}
+
+.workflow-step:hover {
+  transform:
+    translateY(-2px);
+}
+
+
+/* Tablet */
+
+@media (max-width: 950px) {
+
+  .quantstat-workflow {
+    gap: 10px;
+
+    padding:
+      18px
+      16px;
+  }
+
+  .quantstat-workflow > i {
+    width: 26px;
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+  .quantstat-workflow {
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+
+    margin:
+      30px
+      0
+      35px;
+  }
+
+  .quantstat-workflow > i {
+    width: 1px;
+    height: 18px;
+
+    margin-left: 18px;
+
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(56, 189, 248, 0.5),
+        rgba(129, 140, 248, 0.18)
+      );
+  }
+
+  .quantstat-workflow > i::after {
+    top: auto;
+    right: -2px;
+    bottom: 0;
+
+    transform:
+      rotate(135deg);
+  }
+}
+
