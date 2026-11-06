@@ -31,6 +31,9 @@ import TradeDetails
 import SimulationSetup
   from './SimulationSetup'
 
+import MonteCarloWinRates
+  from './MonteCarloWinRates'
+
 import {
   buildEquityAnalytics,
   createSeed,
@@ -739,7 +742,7 @@ function SimulationPage() {
               monteCarlo && (
                 <>
                   {' '}
-                  Â· {
+                  Ãƒâ€šÃ‚Â· {
                     monteCarlo
                       .runs.length
                       .toLocaleString()
@@ -917,6 +920,28 @@ function SimulationPage() {
           handleRun
         }
       />
+      {
+        monteCarlo && (
+          <MonteCarloWinRates
+            result={
+              monteCarlo
+            }
+          />
+        )
+      }
+
+
+      {
+        monteCarlo && (
+          <MonteCarloWinRates
+            result={
+              monteCarlo
+            }
+          />
+        )
+      }
+
+
       {simulation && (
         <>
 
