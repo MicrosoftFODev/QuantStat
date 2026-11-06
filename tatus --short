@@ -1,0 +1,104 @@
+warning: in the working copy of 'src/QuantStat.Web/src/main.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/QuantStat.Web/src/main.tsx b/src/QuantStat.Web/src/main.tsx[m
+[1mindex e57fa90..a328c92 100644[m
+[1m--- a/src/QuantStat.Web/src/main.tsx[m
+[1m+++ b/src/QuantStat.Web/src/main.tsx[m
+[36m@@ -16,7 +16,10 @@[m [mimport {[m
+ [m
+ import App from './App.tsx'[m
+ import AuthGate from './auth/AuthGate'[m
+[31m-import { AuthProvider } from './auth/AuthContext'[m
+[32m+[m
+[32m+[m[32mimport {[m
+[32m+[m[32m  AuthProvider,[m
+[32m+[m[32m} from './auth/AuthContext'[m
+ [m
+ import {[m
+   msalInstance,[m
+[36m@@ -38,42 +41,62 @@[m [masync function startApplication():[m
+       .handleRedirectPromise()[m
+ [m
+   if (redirectResult?.account) {[m
+[32m+[m[32m    /*[m
+[32m+[m[32m     * A redirect result exists only after the user[m
+[32m+[m[32m     * explicitly selected Microsoft sign-in.[m
+[32m+[m[32m     */[m
+     msalInstance.setActiveAccount([m
+       redirectResult.account,[m
+     )[m
+   }[m
+   else {[m
+[31m-    const accounts =[m
+[31m-      msalInstance.getAllAccounts()[m
+[31m-[m
+[32m+[m[32m    /*[m
+[32m+[m[32m     * A normal opening or refresh must never restore[m
+[32m+[m[32m     * a cached Microsoft session automatically.[m
+[32m+[m[32m     *[m
+[32m+[m[32m     * Calling logoutRedirect with navigation disabled[m
+[32m+[m[32m     * clears the local MSAL cache without sending the[m
+[32m+[m[32m     * browser to Microsoft's sign-out page.[m
+[32m+[m[32m     */[m
+     if ([m
+[31m-      accounts.length > 0 &&[m
+[31m-      !msalInstance.getActiveAccount()[m
+[32m+[m[32m      msalInstance[m
+[32m+[m[32m        .getAllAccounts()[m
+[32m+[m[32m        .length > 0[m
+     ) {[m
+[31m-      msalInstance.setActiveAccount([m
+[31m-        accounts[0],[m
+[31m-      )[m
+[32m+[m[32m      await msalInstance[m
+[32m+[m[32m        .logoutRedirect({[m
+[32m+[m[32m          onRedirectNavigate:[m
+[32m+[m[32m            () => false,[m
+[32m+[m[32m        })[m
+     }[m
+[32m+[m
+[32m+[m[32m    msalInstance.setActiveAccount([m
+[32m+[m[32m      null,[m
+[32m+[m[32m    )[m
+   }[m
+ [m
+[31m-    createRoot([m
+[31m-        document.getElementById('root')!,[m
+[31m-    ).render([m
+[31m-        <StrictMode>[m
+[31m-        <MsalProvider instance={ msalInstance } >[m
+[32m+[m[32m  createRoot([m
+[32m+[m[32m    document.getElementById([m
+[32m+[m[32m      'root',[m
+[32m+[m[32m    )!,[m
+[32m+[m[32m  ).render([m
+[32m+[m[32m    <StrictMode>[m
+[32m+[m[32m      <MsalProvider[m
+[32m+[m[32m        instance={msalInstance}[m
+[32m+[m[32m      >[m
+         <AuthProvider>[m
+[31m-        <AuthGate>[m
+[31m-        <PreferencesProvider>[m
+[31m-        <BrowserRouter>[m
+[31m-        <App />[m
+[31m-        </BrowserRouter>[m
+[31m-        </PreferencesProvider>[m
+[31m-        </AuthGate>[m
+[32m+[m[32m          <AuthGate>[m
+[32m+[m[32m            <PreferencesProvider>[m
+[32m+[m[32m              <BrowserRouter>[m
+[32m+[m[32m                <App />[m
+[32m+[m[32m              </BrowserRouter>[m
+[32m+[m[32m            </PreferencesProvider>[m
+[32m+[m[32m          </AuthGate>[m
+         </AuthProvider>[m
+[31m-        </MsalProvider>[m
+[32m+[m[32m      </MsalProvider>[m
+     </StrictMode>,[m
+[31m-    )[m
+[32m+[m[32m  )[m
+ }[m
+ [m
+ [m
+[31m-void startApplication()[m
+[32m+[m[32mvoid startApplication()[m
+\ No newline at end of file[m

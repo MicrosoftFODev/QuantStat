@@ -1,3 +1,5 @@
+import NumericInput
+  from '../../components/inputs/NumericInput'
 interface SimulationSetupProps {
   amountPerPurchase: number
   numberOfPurchases: number
@@ -116,17 +118,13 @@ function SimulationSetup({
             $ / buy
           </span>
 
-          <input
-            type="number"
-            min="0.01"
-            step="10"
+          <NumericInput
             value={amountPerPurchase}
-            onChange={event =>
-              onAmountChange(
-                Number(
-                  event.target.value,
-                ),
-              )
+            minimum={0.01}
+            decimalScale={2}
+            allowNegative={false}
+            onNumericValueChange={
+              onAmountChange
             }
           />
         </label>
@@ -137,17 +135,13 @@ function SimulationSetup({
             Purchases
           </span>
 
-          <input
-            type="number"
-            min="1"
-            step="1"
+          <NumericInput
             value={numberOfPurchases}
-            onChange={event =>
-              onPurchasesChange(
-                Number(
-                  event.target.value,
-                ),
-              )
+            minimum={1}
+            integer
+            allowNegative={false}
+            onNumericValueChange={
+              onPurchasesChange
             }
           />
         </label>
@@ -208,17 +202,13 @@ function SimulationSetup({
             Period
           </span>
 
-          <input
-            type="number"
-            min="1"
-            step="1"
+          <NumericInput
             value={rsiPeriod}
-            onChange={event =>
-              onRsiPeriodChange(
-                Number(
-                  event.target.value,
-                ),
-              )
+            minimum={1}
+            integer
+            allowNegative={false}
+            onNumericValueChange={
+              onRsiPeriodChange
             }
           />
         </label>
@@ -229,18 +219,14 @@ function SimulationSetup({
             Buy below
           </span>
 
-          <input
-            type="number"
-            min="0"
-            max="100"
-            step="1"
+          <NumericInput
             value={rsiThreshold}
-            onChange={event =>
-              onRsiThresholdChange(
-                Number(
-                  event.target.value,
-                ),
-              )
+            minimum={0}
+            maximum={100}
+            integer
+            allowNegative={false}
+            onNumericValueChange={
+              onRsiThresholdChange
             }
           />
         </label>
@@ -273,17 +259,14 @@ function SimulationSetup({
                 Random seed
               </span>
 
-              <input
-                type="number"
-                min="0"
-                step="1"
+              <NumericInput
                 value={seed}
-                onChange={event =>
-                  onSeedChange(
-                    Number(
-                      event.target.value,
-                    ),
-                  )
+                minimum={0}
+                integer
+                allowNegative={false}
+                thousandSeparator={false}
+                onNumericValueChange={
+                  onSeedChange
                 }
               />
             </label>

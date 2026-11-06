@@ -1,4 +1,4 @@
-﻿import {
+import {
   createContext,
   useCallback,
   useContext,
@@ -28,50 +28,6 @@ interface AuthContextValue {
 }
 
 
-const googleUserStorageKey =
-  'quantstat-google-user'
-
-
-function readStoredGoogleUser():
-  QuantStatUser | null {
-  const storedValue =
-    localStorage.getItem(
-      googleUserStorageKey,
-    )
-
-  if (!storedValue) {
-    return null
-  }
-
-  try {
-    const user =
-      JSON.parse(
-        storedValue,
-      ) as QuantStatUser
-
-    if (
-      user.provider !== 'google' ||
-      !user.id
-    ) {
-      localStorage.removeItem(
-        googleUserStorageKey,
-      )
-
-      return null
-    }
-
-    return user
-  }
-  catch {
-    localStorage.removeItem(
-      googleUserStorageKey,
-    )
-
-    return null
-  }
-}
-
-
 const AuthContext =
   createContext<
     AuthContextValue | undefined
@@ -81,15 +37,18 @@ const AuthContext =
 export function AuthProvider({
   children,
 }: PropsWithChildren) {
+  /*
+   * Google authentication deliberately exists only
+   * in React memory. Reloading or reopening QuantStat
+   * therefore requires a new explicit sign-in.
+   */
   const [
     googleUser,
     setGoogleUserState,
   ] =
     useState<
       QuantStatUser | null
-    >(
-      readStoredGoogleUser,
-    )
+    >(null)
 
 
   const setGoogleUser =
@@ -101,20 +60,6 @@ export function AuthProvider({
         setGoogleUserState(
           user,
         )
-
-        if (user) {
-          localStorage.setItem(
-            googleUserStorageKey,
-            JSON.stringify(
-              user,
-            ),
-          )
-        }
-        else {
-          localStorage.removeItem(
-            googleUserStorageKey,
-          )
-        }
       },
       [],
     )
@@ -123,7 +68,7 @@ export function AuthProvider({
   const signOutGoogle =
     useCallback(
       (): void => {
-        setGoogleUser(
+        setGoogleUserState(
           null,
         )
 
@@ -131,9 +76,7 @@ export function AuthProvider({
           ?.accounts.id
           .disableAutoSelect?.()
       },
-      [
-        setGoogleUser,
-      ],
+      [],
     )
 
 

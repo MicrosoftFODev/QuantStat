@@ -32,6 +32,6 @@ export const msalInstance =
 
     cache: {
       cacheLocation:
-        BrowserCacheLocation.LocalStorage,
+        BrowserCacheLocation.SessionStorage,
     },
   })
