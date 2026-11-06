@@ -21,6 +21,9 @@ import GoogleSignInButton
 import MarketPulseVisual
   from '../landing/MarketPulseVisual'
 
+import FeatureShowcase
+  from '../landing/FeatureShowcase'
+
 import {
   loginRequest,
 } from './msalConfig'
@@ -120,53 +123,6 @@ function AuthGate({
             simulation.
           </p>
 
-          <div className="landing-capabilities">
-            <article>
-              <span className="capability-number">
-                01
-              </span>
-
-              <strong>
-                Explore
-              </strong>
-
-              <p>
-                Stocks and crypto with interactive
-                market analytics.
-              </p>
-            </article>
-
-            <article>
-              <span className="capability-number">
-                02
-              </span>
-
-              <strong>
-                Understand
-              </strong>
-
-              <p>
-                Statistics, distributions and
-                quantitative diagnostics.
-              </p>
-            </article>
-
-            <article>
-              <span className="capability-number">
-                03
-              </span>
-
-              <strong>
-                Experiment
-              </strong>
-
-              <p>
-                Historical strategies and
-                reproducible Monte Carlo analysis.
-              </p>
-            </article>
-          </div>
-
           <MarketPulseVisual />
         </div>
 
@@ -244,6 +200,8 @@ function AuthGate({
           </div>
         </aside>
       </section>
+
+      <FeatureShowcase />
 
       <footer className="landing-footer">
         <span>
