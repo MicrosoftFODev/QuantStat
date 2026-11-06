@@ -18,6 +18,9 @@ import {
 import GoogleSignInButton
   from './GoogleSignInButton'
 
+import MarketPulseVisual
+  from '../landing/MarketPulseVisual'
+
 import {
   loginRequest,
 } from './msalConfig'
@@ -164,97 +167,7 @@ function AuthGate({
             </article>
           </div>
 
-          <div
-            className="landing-market-visual"
-            aria-hidden="true"
-          >
-            <div className="market-visual-top">
-              <span>
-                QUANTSTAT / RESEARCH
-              </span>
-
-              <span className="market-live">
-                LIVE ANALYTICS
-              </span>
-            </div>
-
-            <svg
-              viewBox="0 0 900 220"
-              preserveAspectRatio="none"
-              role="presentation"
-            >
-              <defs>
-                <linearGradient
-                  id="quantstatLine"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="0"
-                >
-                  <stop
-                    offset="0%"
-                    stopColor="#38bdf8"
-                  />
-                  <stop
-                    offset="55%"
-                    stopColor="#2dd4bf"
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="#818cf8"
-                  />
-                </linearGradient>
-
-                <linearGradient
-                  id="quantstatArea"
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stopColor="#38bdf8"
-                    stopOpacity="0.24"
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="#38bdf8"
-                    stopOpacity="0"
-                  />
-                </linearGradient>
-              </defs>
-
-              <path
-                className="market-area"
-                d="M0 178 C55 168 70 142 125 149 C180 156 190 104 245 116 C300 128 323 72 380 91 C438 110 451 67 505 75 C560 84 579 39 635 56 C690 72 716 38 760 45 C811 53 846 21 900 28 L900 220 L0 220 Z"
-                fill="url(#quantstatArea)"
-              />
-
-              <path
-                className="market-line"
-                d="M0 178 C55 168 70 142 125 149 C180 156 190 104 245 116 C300 128 323 72 380 91 C438 110 451 67 505 75 C560 84 579 39 635 56 C690 72 716 38 760 45 C811 53 846 21 900 28"
-                fill="none"
-                stroke="url(#quantstatLine)"
-                strokeWidth="3"
-              />
-            </svg>
-
-            <div className="market-metrics">
-              <span>
-                STATISTICS
-              </span>
-              <span>
-                RISK
-              </span>
-              <span>
-                SIMULATION
-              </span>
-              <span>
-                MONTE CARLO
-              </span>
-            </div>
-          </div>
+          <MarketPulseVisual />
         </div>
 
         <aside className="landing-auth-panel">
