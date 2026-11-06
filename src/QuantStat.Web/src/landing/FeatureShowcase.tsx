@@ -1,3 +1,4 @@
+import ForecastVisual from './ForecastVisual'
 import MonteCarloVisual from './MonteCarloVisual'
 import StatisticsVisual from './StatisticsVisual'
 import MarketVisual from './MarketVisual'
@@ -162,20 +163,8 @@ function FeatureShowcase() {
             diagnostics and uncertainty.
           </p>
 
-          <div
-            className="forecast-demo"
-            aria-hidden="true"
-          >
-            <span className="forecast-history" />
-            <span className="forecast-future" />
-            <span className="forecast-band" />
-          </div>
+          <ForecastVisual />
 
-          <div className="feature-tags">
-            <span>Models</span>
-            <span>Diagnostics</span>
-            <span>Uncertainty</span>
-          </div>
         </article>
       </div>
 
