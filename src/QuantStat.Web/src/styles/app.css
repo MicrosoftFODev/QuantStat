@@ -12683,3 +12683,159 @@ strong.negative {
   }
 }
 
+
+/* ============================================================
+   QuantStat - Equal showcase card sizing
+   ============================================================ */
+
+@media (min-width: 901px) {
+
+  /* Every showcase card has identical overall height */
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+
+    height: 660px;
+    min-height: 660px;
+
+    padding: 34px;
+  }
+
+  /* Keep titles/descriptions aligned */
+  .feature-card-number {
+    flex: 0 0 auto;
+  }
+
+  .feature-card h3 {
+    flex: 0 0 auto;
+  }
+
+  .feature-card > p {
+    flex: 0 0 auto;
+
+    min-height: 58px;
+
+    margin-bottom: 20px;
+  }
+
+  /* Every major embedded visual gets the same available area */
+  .market-card-visual,
+  .statistics-visual,
+  .rsi-visual,
+  .monte-carlo-visual,
+  .dictionary-visual,
+  .forecast-model-visual {
+    flex: 1 1 auto;
+
+    width: 100%;
+
+    min-height: 360px;
+    max-height: 360px;
+
+    margin-top: auto;
+  }
+
+
+  /* Markets */
+  .market-card-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .market-card-chart {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 225px;
+  }
+
+
+  /* Statistics */
+  .statistics-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .statistics-distribution {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .statistics-bars {
+    height: 185px;
+  }
+
+
+  /* RSI */
+  .rsi-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rsi-plot {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 235px;
+  }
+
+
+  /* Monte Carlo */
+  .monte-carlo-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .monte-carlo-chart {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 230px;
+  }
+
+
+  /* Dictionary */
+  .dictionary-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dictionary-concept {
+    flex: 1 1 auto;
+
+    min-height: 0;
+  }
+
+
+  /* CAPM / GARCH */
+  .forecast-model-visual {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .capm-preview,
+  .garch-preview {
+    flex: 1 1 auto;
+
+    height: auto;
+    min-height: 270px;
+  }
+}
+
+
+/* Keep responsive cards natural on tablets/phones */
+
+@media (max-width: 900px) {
+
+  .feature-card {
+    height: auto;
+    min-height: 0;
+  }
+
+  .market-card-visual,
+  .statistics-visual,
+  .rsi-visual,
+  .monte-carlo-visual,
+  .dictionary-visual,
+  .forecast-model-visual {
+    max-height: none;
+  }
+}
+
