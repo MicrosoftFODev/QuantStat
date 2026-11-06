@@ -11101,3 +11101,433 @@ strong.negative {
   }
 }
 
+
+/* ============================================================
+   QuantStat - Rotating Distribution Visual
+   ============================================================ */
+
+.statistics-visual {
+  position: relative;
+  margin-top: 20px;
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(51, 65, 85, 0.65);
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.55),
+      rgba(2, 6, 23, 0.72)
+    );
+}
+
+
+/* Header */
+
+.statistics-visual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 15px;
+
+  border-bottom:
+    1px solid
+    rgba(51, 65, 85, 0.45);
+}
+
+.statistics-visual-header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.statistics-distribution-type {
+  text-align: right;
+}
+
+.statistics-visual-header span {
+  color: #475569;
+
+  font-size: 0.49rem;
+  letter-spacing: 0.1em;
+}
+
+.statistics-visual-header strong {
+  color: #cbd5e1;
+
+  font-size: 0.76rem;
+}
+
+.statistics-distribution-type strong {
+  color: #7dd3fc;
+}
+
+
+/* Distribution canvas */
+
+.statistics-distribution {
+  position: relative;
+
+  min-height: 220px;
+
+  padding:
+    20px
+    18px
+    12px
+    52px;
+
+  background-image:
+    linear-gradient(
+      rgba(56, 189, 248, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.035) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    100% 44px,
+    60px 100%;
+
+  animation:
+    statistics-switch
+    350ms
+    ease-out;
+}
+
+
+/* Vertical axis text */
+
+.statistics-y-label {
+  position: absolute;
+
+  top: 50%;
+  left: 10px;
+
+  color: #334155;
+
+  font-size: 0.43rem;
+  letter-spacing: 0.08em;
+
+  transform:
+    translateY(-50%)
+    rotate(-90deg);
+
+  white-space: nowrap;
+}
+
+
+/* Histogram / PMF */
+
+.statistics-bars {
+  position: relative;
+
+  display: flex;
+  align-items: end;
+  justify-content: center;
+
+  gap: 5px;
+
+  height: 155px;
+
+  padding-top: 10px;
+
+  border-bottom:
+    1px solid
+    rgba(100, 116, 139, 0.35);
+}
+
+.statistics-bars i {
+  position: relative;
+
+  flex: 1;
+
+  max-width: 28px;
+
+  min-height: 1px;
+
+  border-radius:
+    3px 3px 0 0;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(14, 165, 233, 0.28),
+      rgba(45, 212, 191, 0.82)
+    );
+
+  transform-origin: bottom;
+
+  animation:
+    statistics-bar-arrival
+    450ms
+    ease-out
+    both;
+}
+
+
+/* Slight staggering without continuous animations */
+
+.statistics-bars i:nth-child(2n) {
+  animation-delay: 20ms;
+}
+
+.statistics-bars i:nth-child(3n) {
+  animation-delay: 45ms;
+}
+
+.statistics-bars i:nth-child(4n) {
+  animation-delay: 65ms;
+}
+
+
+/* Mean reference */
+
+.statistics-mean-marker {
+  position: absolute;
+
+  top: 5px;
+  bottom: 0;
+  left: 50%;
+
+  width: 1px;
+
+  border-left:
+    1px dashed
+    rgba(129, 140, 248, 0.65);
+}
+
+.statistics-mean-marker span {
+  position: absolute;
+
+  top: 0;
+  left: 5px;
+
+  color: #818cf8;
+
+  font-size: 0.44rem;
+  letter-spacing: 0.09em;
+}
+
+
+/* Horizontal axis */
+
+.statistics-axis {
+  display: flex;
+  justify-content: space-between;
+
+  padding-top: 7px;
+
+  color: #334155;
+
+  font-size: 0.43rem;
+  letter-spacing: 0.07em;
+}
+
+
+/* Footer metrics */
+
+.statistics-visual-footer {
+  display: grid;
+
+  grid-template-columns:
+    1.5fr
+    0.7fr
+    0.9fr
+    auto;
+
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 11px 14px;
+
+  border-top:
+    1px solid
+    rgba(51, 65, 85, 0.45);
+}
+
+.statistics-visual-footer > div {
+  display: grid;
+  gap: 3px;
+}
+
+.statistics-visual-footer span {
+  color: #475569;
+
+  font-size: 0.45rem;
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.statistics-visual-footer strong {
+  color: #94a3b8;
+
+  font-size: 0.6rem;
+
+  font-variant-numeric:
+    tabular-nums;
+}
+
+.statistics-visual-footer small {
+  color: #334155;
+
+  font-size: 0.44rem;
+
+  white-space: nowrap;
+}
+
+
+/* Distribution navigator */
+
+.statistics-pagination {
+  display: flex;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding:
+    0
+    10px
+    11px;
+}
+
+.statistics-pagination span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #334155;
+
+  transition:
+    background
+    180ms ease,
+    transform
+    180ms ease;
+}
+
+.statistics-pagination span.active {
+  background: #38bdf8;
+
+  transform: scale(1.35);
+
+  box-shadow:
+    0 0 8px
+    rgba(56, 189, 248, 0.55);
+}
+
+
+/* ============================================================
+   Animations
+   Only run when switching distributions.
+   ============================================================ */
+
+@keyframes statistics-switch {
+
+  from {
+    opacity: 0.45;
+    transform:
+      translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes statistics-bar-arrival {
+
+  from {
+    transform:
+      scaleY(0.08);
+
+    opacity: 0.25;
+  }
+
+  to {
+    transform:
+      scaleY(1);
+
+    opacity: 1;
+  }
+}
+
+
+/* Desktop */
+
+@media (min-width: 1051px) {
+
+  .statistics-distribution {
+    min-height: 235px;
+  }
+
+  .statistics-bars {
+    height: 170px;
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+  .statistics-distribution {
+    min-height: 190px;
+
+    padding-left: 43px;
+  }
+
+  .statistics-bars {
+    height: 130px;
+    gap: 3px;
+  }
+
+  .statistics-visual-footer {
+    grid-template-columns:
+      1fr 1fr;
+
+    gap: 9px;
+  }
+
+  .statistics-visual-footer small {
+    display: none;
+  }
+}
+
+
+/* Reduced motion */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  .statistics-distribution,
+  .statistics-bars i {
+    animation: none !important;
+  }
+}
+
+
+/* Distribution mean marker refinement */
+
+.statistics-mean-marker span {
+  min-width: max-content;
+  padding: 3px 5px;
+  border: 1px solid rgba(129, 140, 248, 0.22);
+  border-radius: 4px;
+  background: rgba(2, 6, 23, 0.88);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+

@@ -1,3 +1,5 @@
+import MonteCarloVisual from './MonteCarloVisual'
+import StatisticsVisual from './StatisticsVisual'
 import MarketVisual from './MarketVisual'
 import RsiVisual from './RsiVisual'
 
@@ -69,27 +71,7 @@ function FeatureShowcase() {
             and quantitative diagnostics.
           </p>
 
-          <div
-            className="feature-histogram"
-            aria-hidden="true"
-          >
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-
-          <div className="feature-tags">
-            <span>Mean</span>
-            <span>Variance</span>
-            <span>Quantiles</span>
-            <span>Tests</span>
-          </div>
+          <StatisticsVisual />
         </article>
 
         <article className="feature-card feature-rsi">
@@ -126,34 +108,8 @@ function FeatureShowcase() {
             with reproducible Monte Carlo experiments.
           </p>
 
-          <div
-            className="feature-monte-carlo"
-            aria-hidden="true"
-          >
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
+          <MonteCarloVisual />
 
-          <div className="simulation-demo-stats">
-            <span>
-              <strong>1,000</strong>
-              RUNS
-            </span>
-
-            <span>
-              <strong>95%</strong>
-              CI
-            </span>
-
-            <span>
-              <strong>SEED</strong>
-              REPRODUCIBLE
-            </span>
-          </div>
         </article>
 
         <article className="feature-card feature-dictionary">
