@@ -742,7 +742,7 @@ function SimulationPage() {
               monteCarlo && (
                 <>
                   {' '}
-                  · {
+                  Â· {
                     monteCarlo
                       .runs.length
                       .toLocaleString()
@@ -931,15 +931,6 @@ function SimulationPage() {
       }
 
 
-      {
-        monteCarlo && (
-          <MonteCarloWinRates
-            result={
-              monteCarlo
-            }
-          />
-        )
-      }
 
 
       {simulation && (
