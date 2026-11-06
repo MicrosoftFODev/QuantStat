@@ -1,37 +1,23 @@
-﻿import type {
-  EquityAnalytics,
-  SimulationResult,
+import type {
+  MonteCarloStrategySummary,
 } from './simulationTypes'
 
 
 interface StrategyComparisonProps {
-  random: SimulationResult
-  randomAnalytics: EquityAnalytics
+  summaries:
+    MonteCarloStrategySummary[]
 
-  dca: SimulationResult
-  dcaAnalytics: EquityAnalytics
-
-  rsi: SimulationResult
-  rsiAnalytics: EquityAnalytics
-
-  lumpSum: SimulationResult
-  lumpSumAnalytics: EquityAnalytics
-
-  rsiLabel: string
-  rsiPeriod: number
-
-  winnerName: string
-  winnerDifference: number
+  runCount: number
 }
 
 
-interface StrategyRow {
-  name: string
-  detail: string
-  color: string
-  result: SimulationResult
-  analytics: EquityAnalytics
-}
+const strategyColors:
+  Record<string, string> = {
+    random: '#6c8cff',
+    dca: '#22c55e',
+    rsi: '#a78bfa',
+    lumpSum: '#f59e0b',
+  }
 
 
 function formatCurrency(
@@ -48,25 +34,6 @@ function formatCurrency(
 }
 
 
-function formatSignedCurrency(
-  value: number,
-): string {
-  const formatted =
-    formatCurrency(
-      Math.abs(value),
-    )
-
-  if (value > 0) {
-    return `+${formatted}`
-  }
-
-  if (value < 0) {
-    return `-${formatted}`
-  }
-
-  return formatted
-}
-
 
 function formatSignedPercent(
   value: number,
@@ -80,106 +47,134 @@ function formatSignedPercent(
 
 
 function StrategyComparison({
-  random,
-  randomAnalytics,
-  dca,
-  dcaAnalytics,
-  rsi,
-  rsiAnalytics,
-  lumpSum,
-  lumpSumAnalytics,
-  rsiLabel,
-  rsiPeriod,
-  winnerName,
-  winnerDifference,
+  summaries,
+  runCount,
 }: StrategyComparisonProps) {
-  const strategies:
-    StrategyRow[] = [
-      {
-        name:
-          'Random Timing',
-        detail:
-          `Seed ${random.seed}`,
-        color:
-          '#6c8cff',
-        result:
-          random,
-        analytics:
-          randomAnalytics,
+  const rankedSummaries =
+    [...summaries].sort(
+      (
+        left,
+        right,
+      ) => {
+        if (
+          right.wins !==
+          left.wins
+        ) {
+          return (
+            right.wins -
+            left.wins
+          )
+        }
+
+        if (
+          right.winRatePercent !==
+          left.winRatePercent
+        ) {
+          return (
+            right.winRatePercent -
+            left.winRatePercent
+          )
+        }
+
+        return (
+          right.finalWealth.median -
+          left.finalWealth.median
+        )
       },
-      {
-        name:
-          'Regular DCA',
-        detail:
-          'Even spacing',
-        color:
-          '#22c55e',
-        result:
-          dca,
-        analytics:
-          dcaAnalytics,
-      },
-      {
-        name:
-          rsiLabel,
-        detail:
-          `Period ${rsiPeriod}`,
-        color:
-          '#a78bfa',
-        result:
-          rsi,
-        analytics:
-          rsiAnalytics,
-      },
-      {
-        name:
-          'Lump Sum / Buy & Hold',
-        detail:
-          'Full initial investment',
-        color:
-          '#f59e0b',
-        result:
-          lumpSum,
-        analytics:
-          lumpSumAnalytics,
-      },
-    ]
+    )
+
+  const winner =
+    rankedSummaries[0] ??
+    null
+
+  const second =
+    rankedSummaries[1] ??
+    null
+
+  const winDifference =
+    winner && second
+      ? winner.wins -
+        second.wins
+      : 0
 
   return (
     <section className="strategy-panel">
       <div className="strategy-panel-header">
         <div>
           <span className="simulation-eyebrow">
-            Historical strategies
+            Overall Monte Carlo results
           </span>
 
           <h2>
-            Strategy comparison
+            Aggregate strategy comparison
           </h2>
 
           <p>
-            Same starting capital and terminal valuation date.
+            Final values summarize all{' '}
+            {runCount.toLocaleString()}
+            {' '}
+            completed historical simulations.
           </p>
         </div>
 
-        <div className="strategy-best">
-          <span>
-            Best historical
-          </span>
+        {winner && (
+          <div className="strategy-best">
+            <span>
+              Most frequent winner
+            </span>
 
-          <strong>
-            {winnerName}
-          </strong>
+            <strong>
+              {winner.strategyName}
+            </strong>
 
-          <small>
-            +{formatCurrency(
-              winnerDifference,
-            )}{' '}
-            vs second
-          </small>
-        </div>
+            <small>
+              {winner.wins.toLocaleString()}
+              {' '}
+              outright wins
+              {' Â· '}
+              {
+                winner
+                  .winRatePercent
+                  .toFixed(1)
+              }
+              %
+            </small>
+
+            <small>
+              95% Wilson CI
+              {' '}
+              {
+                winner
+                  .wilsonLowerPercent
+                  .toFixed(1)
+              }
+              %
+              {' â€“ '}
+              {
+                winner
+                  .wilsonUpperPercent
+                  .toFixed(1)
+              }
+              %
+            </small>
+
+            {second && (
+              <small>
+                {winDifference}
+                {' '}
+                more wins than second
+              </small>
+            )}
+          </div>
+        )}
       </div>
 
+      <div className="strategy-comparison-note">
+        Winner is determined by the number
+        of runs in which a strategy achieved
+        the highest terminal wealth without
+        sharing first place.
+      </div>
 
       <div className="strategy-table-wrap">
         <table className="strategy-table">
@@ -190,38 +185,48 @@ function StrategyComparison({
               </th>
 
               <th>
-                Wealth
+                Median wealth
+              </th>
+
+
+              <th>
+                Median return
               </th>
 
               <th>
-                PnL
+                Mean return
               </th>
 
               <th>
-                Return
+                5thâ€“95th return
               </th>
 
               <th>
-                Max DD
+                Loss probability
               </th>
 
               <th>
-                Deployed
+                Median max DD
+              </th>
+
+              <th>
+                Outright wins
               </th>
             </tr>
           </thead>
 
           <tbody>
-            {strategies.map(
-              strategy => {
+            {rankedSummaries.map(
+              summary => {
                 const isWinner =
-                  strategy.name ===
-                  winnerName
+                  summary.strategyId ===
+                  winner?.strategyId
+
 
                 return (
                   <tr
                     key={
-                      strategy.name
+                      summary.strategyId
                     }
                     className={
                       isWinner
@@ -235,27 +240,42 @@ function StrategyComparison({
                           className="strategy-dot"
                           style={{
                             backgroundColor:
-                              strategy.color,
+                              strategyColors[
+                                summary
+                                  .strategyId
+                              ] ??
+                              '#94a3b8',
                           }}
                         />
 
                         <div>
                           <strong>
                             {
-                              strategy.name
+                              summary
+                                .strategyName
                             }
                           </strong>
 
                           <small>
                             {
-                              strategy.detail
+                              summary.wins
+                                .toLocaleString()
                             }
+                            {' '}
+                            wins
+                            {' Â· '}
+                            {
+                              summary
+                                .winRatePercent
+                                .toFixed(1)
+                            }
+                            %
                           </small>
                         </div>
 
                         {isWinner && (
                           <span className="strategy-best-badge">
-                            Best
+                            Overall
                           </span>
                         )}
                       </div>
@@ -263,60 +283,114 @@ function StrategyComparison({
 
                     <td className="strategy-value-strong">
                       {formatCurrency(
-                        strategy.result
-                          .finalWealth,
+                        summary
+                          .finalWealth
+                          .median,
                       )}
                     </td>
 
-                    <td
-                      className={
-                        strategy.result
-                          .pnl >= 0
-                          ? 'positive-value'
-                          : 'negative-value'
-                      }
-                    >
-                      {formatSignedCurrency(
-                        strategy.result.pnl,
-                      )}
-                    </td>
 
                     <td
                       className={
-                        strategy.result
-                          .returnPercent >= 0
+                        summary
+                          .returns
+                          .median >= 0
                           ? 'positive-value'
                           : 'negative-value'
                       }
                     >
                       {formatSignedPercent(
-                        strategy.result
-                          .returnPercent,
+                        summary
+                          .returns
+                          .median,
                       )}
                     </td>
 
                     <td
                       className={
-                        strategy.analytics
-                          .maxDrawdownPercent <
-                        0
-                          ? 'negative-value'
-                          : undefined
+                        summary
+                          .returns
+                          .mean >= 0
+                          ? 'positive-value'
+                          : 'negative-value'
                       }
                     >
                       {formatSignedPercent(
-                        strategy.analytics
-                          .maxDrawdownPercent,
+                        summary
+                          .returns
+                          .mean,
                       )}
                     </td>
 
                     <td>
                       {
-                        strategy.analytics
-                          .capitalUtilizationPercent
+                        summary
+                          .returns
+                          .percentile05
+                          .toFixed(2)
+                      }
+                      %
+                      {' â€“ '}
+                      {
+                        summary
+                          .returns
+                          .percentile95
+                          .toFixed(2)
+                      }
+                      %
+                    </td>
+
+                    <td
+                      className={
+                        summary
+                          .lossProbabilityPercent >
+                        0
+                          ? 'negative-value'
+                          : undefined
+                      }
+                    >
+                      {
+                        summary
+                          .lossProbabilityPercent
                           .toFixed(1)
                       }
                       %
+                    </td>
+
+                    <td
+                      className={
+                        summary
+                          .maxDrawdowns
+                          .median < 0
+                          ? 'negative-value'
+                          : undefined
+                      }
+                    >
+                      {formatSignedPercent(
+                        summary
+                          .maxDrawdowns
+                          .median,
+                      )}
+                    </td>
+
+                    <td>
+                      <strong>
+                        {
+                          summary.wins
+                            .toLocaleString()
+                        }
+                      </strong>
+
+                      <br />
+
+                      <small>
+                        {
+                          summary
+                            .winRatePercent
+                            .toFixed(1)
+                        }
+                        %
+                      </small>
                     </td>
                   </tr>
                 )

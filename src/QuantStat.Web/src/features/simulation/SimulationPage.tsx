@@ -667,66 +667,6 @@ function SimulationPage() {
       ],
     )
 
-  const benchmarkWinner =
-    useMemo(
-      () => {
-        if (
-          !simulation ||
-          !dcaSimulation ||
-          !lumpSumSimulation ||
-          !rsiSimulation
-        ) {
-          return null
-        }
-
-        const strategies = [
-          {
-            name: 'Random timing',
-            wealth:
-              simulation.finalWealth,
-          },
-          {
-            name: 'Regular DCA',
-            wealth:
-              dcaSimulation.finalWealth,
-          },
-          {
-            name: 'Lump Sum / Buy & Hold',
-            wealth:
-              lumpSumSimulation.finalWealth,
-          },
-          {
-            name:
-              `${rsiTypeLabel(rsiType)} < ${rsiThreshold}`,
-            wealth:
-              rsiSimulation.finalWealth,
-          },
-        ]
-
-        const ordered =
-          [...strategies].sort(
-            (left, right) =>
-              right.wealth -
-              left.wealth,
-          )
-
-        return {
-          winner:
-            ordered[0],
-          difference:
-            ordered[0].wealth -
-            ordered[1].wealth,
-        }
-      },
-      [
-        simulation,
-        dcaSimulation,
-        lumpSumSimulation,
-        rsiSimulation,
-        rsiType,
-        rsiThreshold,
-      ],
-    )
 
   return (
     <>
@@ -742,7 +682,7 @@ function SimulationPage() {
               monteCarlo && (
                 <>
                   {' '}
-                  Â· {
+                  ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {
                     monteCarlo
                       .runs.length
                       .toLocaleString()
@@ -947,43 +887,11 @@ function SimulationPage() {
             lumpSumAnalytics && (
               <>
                 <StrategyComparison
-                  random={
-                    simulation
+                  summaries={
+                    monteCarlo?.strategySummaries ?? []
                   }
-                  randomAnalytics={
-                    randomAnalytics
-                  }
-                  dca={
-                    dcaSimulation
-                  }
-                  dcaAnalytics={
-                    dcaAnalytics
-                  }
-                  rsi={
-                    rsiSimulation
-                  }
-                  rsiAnalytics={
-                    rsiAnalytics
-                  }
-                  lumpSum={
-                    lumpSumSimulation
-                  }
-                  lumpSumAnalytics={
-                    lumpSumAnalytics
-                  }
-                  rsiLabel={
-                    `${rsiTypeLabel(rsiType)} < ${rsiThreshold}`
-                  }
-                  rsiPeriod={
-                    rsiPeriod
-                  }
-                  winnerName={
-                    benchmarkWinner?.winner.name ??
-                    '-'
-                  }
-                  winnerDifference={
-                    benchmarkWinner?.difference ??
-                    0
+                  runCount={
+                    monteCarlo?.runs.length ?? 0
                   }
                 />
 
