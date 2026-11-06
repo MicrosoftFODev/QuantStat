@@ -14,6 +14,7 @@ import type {
 
 
 import type {
+  MonteCarloResult,
   SimulationResult,
   SimulationSelection,
 } from './simulationTypes'
@@ -34,11 +35,11 @@ import {
   buildEquityAnalytics,
   createSeed,
   rsiTypeLabel,
-  runDcaSimulation,
-  runLumpSumSimulation,
-  runRandomSimulation,
-  runRsiSimulation,
 } from './simulationEngine'
+
+import {
+  runMonteCarloSimulation,
+} from './monteCarloEngine'
 
 
 
@@ -252,83 +253,99 @@ function SimulationPage() {
     >(null)
 
 
-  const dcaSimulation =
+  const [
+    monteCarlo,
+    setMonteCarlo,
+  ] =
+    useState<
+      MonteCarloResult | null
+    >(null)
+
+
+  const monteCarloRunCount =
+    1_000
+
+
+  const representativeRun =
+    useMemo(
+      () => {
+        if (!monteCarlo) {
+          return null
+        }
+
+        return (
+          monteCarlo.runs.find(
+            run =>
+              run.runNumber ===
+              monteCarlo
+                .representativeRunNumber,
+          ) ?? null
+        )
+      },
+      [
+        monteCarlo,
+      ],
+    )
+
+
+  const representativeDashboard =
     useMemo(
       () => {
         if (
           !dashboard ||
-          !simulation
+          !monteCarlo ||
+          !representativeRun
         ) {
           return null
         }
 
-        return runDcaSimulation(
-          dashboard,
-          amountPerPurchase,
-          numberOfPurchases,
-        )
+        const validPoints =
+          dashboard.points.filter(
+            point =>
+              Number.isFinite(
+                point.price,
+              ) &&
+              point.price > 0,
+          )
+
+        return {
+          ...dashboard,
+
+          points:
+            validPoints.slice(
+              representativeRun
+                .windowStartIndex,
+
+              representativeRun
+                .windowStartIndex +
+                monteCarlo.windowSize,
+            ),
+        }
       },
       [
         dashboard,
-        simulation,
-        amountPerPurchase,
-        numberOfPurchases,
+        monteCarlo,
+        representativeRun,
       ],
     )
+
+
+  const dcaSimulation =
+    monteCarlo
+      ?.representativeDca ??
+    null
 
 
   const lumpSumSimulation =
-    useMemo(
-      () => {
-        if (
-          !dashboard ||
-          !simulation
-        ) {
-          return null
-        }
-
-        return runLumpSumSimulation(
-          dashboard,
-          amountPerPurchase,
-          numberOfPurchases,
-        )
-      },
-      [
-        dashboard,
-        simulation,
-        amountPerPurchase,
-        numberOfPurchases,
-      ],
-    )
+    monteCarlo
+      ?.representativeLumpSum ??
+    null
 
 
   const rsiSimulation =
-    useMemo(
-      () => {
-        if (
-          !dashboard ||
-          !simulation
-        ) {
-          return null
-        }
-
-        return runRsiSimulation(
-          dashboard,
-          amountPerPurchase,
-          numberOfPurchases,
-          rsiType,
-          rsiThreshold,
-        )
-      },
-      [
-        dashboard,
-        simulation,
-        amountPerPurchase,
-        numberOfPurchases,
-        rsiType,
-        rsiThreshold,
-      ],
-    )
+    monteCarlo
+      ?.representativeRsi ??
+    null
 
 
   const startingBudget =
@@ -486,8 +503,10 @@ function SimulationPage() {
   }, [selection, rsiPeriod])
 
 
-  const handleRun =
-    (): void => {
+  const executeMonteCarlo =
+    (
+      masterSeed: number,
+    ): void => {
       if (
         !dashboard ||
         !parametersValid
@@ -498,26 +517,55 @@ function SimulationPage() {
       try {
         setError(null)
 
-        setSimulation(
-          runRandomSimulation(
+        const result =
+          runMonteCarloSimulation(
             dashboard,
-            amountPerPurchase,
-            numberOfPurchases,
-            seed,
-          ),
+            {
+              runCount:
+                monteCarloRunCount,
+
+              masterSeed,
+
+              amountPerPurchase,
+
+              requestedPurchases:
+                numberOfPurchases,
+
+              rsiType,
+              rsiPeriod,
+              rsiThreshold,
+            },
+          )
+
+        setMonteCarlo(
+          result,
+        )
+
+        setSimulation(
+          result
+            .representativeRandom,
         )
       }
       catch (
         reason: unknown
       ) {
+        setMonteCarlo(null)
         setSimulation(null)
 
         setError(
           reason instanceof Error
             ? reason.message
-            : 'The simulation could not be completed.',
+            : 'The Monte Carlo simulation could not be completed.',
         )
       }
+    }
+
+
+  const handleRun =
+    (): void => {
+      executeMonteCarlo(
+        seed,
+      )
     }
 
 
@@ -527,62 +575,37 @@ function SimulationPage() {
         createSeed()
 
       setSeed(nextSeed)
+      setMonteCarlo(null)
       setSimulation(null)
     }
 
 
   const handleRunNew =
     (): void => {
-      if (
-        !dashboard ||
-        !parametersValid
-      ) {
-        return
-      }
-
       const nextSeed =
         createSeed()
 
       setSeed(nextSeed)
-      setError(null)
 
-      try {
-        setSimulation(
-          runRandomSimulation(
-            dashboard,
-            amountPerPurchase,
-            numberOfPurchases,
-            nextSeed,
-          ),
-        )
-      }
-      catch (
-        reason: unknown
-      ) {
-        setSimulation(null)
-
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : 'The simulation could not be completed.',
-        )
-      }
+      executeMonteCarlo(
+        nextSeed,
+      )
     }
 
 
   const randomAnalytics =
     useMemo(
       () =>
-        dashboard &&
+        representativeDashboard &&
         simulation
           ? buildEquityAnalytics(
-              dashboard,
+              representativeDashboard,
               simulation.trades,
               simulation.startingBudget,
             )
           : null,
       [
-        dashboard,
+        representativeDashboard,
         simulation,
       ],
     )
@@ -591,16 +614,16 @@ function SimulationPage() {
   const dcaAnalytics =
     useMemo(
       () =>
-        dashboard &&
+        representativeDashboard &&
         dcaSimulation
           ? buildEquityAnalytics(
-              dashboard,
+              representativeDashboard,
               dcaSimulation.trades,
               dcaSimulation.startingBudget,
             )
           : null,
       [
-        dashboard,
+        representativeDashboard,
         dcaSimulation,
       ],
     )
@@ -609,16 +632,16 @@ function SimulationPage() {
   const rsiAnalytics =
     useMemo(
       () =>
-        dashboard &&
+        representativeDashboard &&
         rsiSimulation
           ? buildEquityAnalytics(
-              dashboard,
+              representativeDashboard,
               rsiSimulation.trades,
               rsiSimulation.startingBudget,
             )
           : null,
       [
-        dashboard,
+        representativeDashboard,
         rsiSimulation,
       ],
     )
@@ -627,16 +650,16 @@ function SimulationPage() {
   const lumpSumAnalytics =
     useMemo(
       () =>
-        dashboard &&
+        representativeDashboard &&
         lumpSumSimulation
           ? buildEquityAnalytics(
-              dashboard,
+              representativeDashboard,
               lumpSumSimulation.trades,
               lumpSumSimulation.startingBudget,
             )
           : null,
       [
-        dashboard,
+        representativeDashboard,
         lumpSumSimulation,
       ],
     )
@@ -712,6 +735,18 @@ function SimulationPage() {
 
           <p>
             Historical investment strategy simulation and Monte Carlo analysis
+            {
+              monteCarlo && (
+                <>
+                  {' '}
+                  Â· {
+                    monteCarlo
+                      .runs.length
+                      .toLocaleString()
+                  } runs completed
+                </>
+              )
+            }
           </p>
         </div>
       </section>
@@ -823,6 +858,7 @@ function SimulationPage() {
             setAmountPerPurchase(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
@@ -831,6 +867,7 @@ function SimulationPage() {
             setNumberOfPurchases(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
@@ -839,6 +876,7 @@ function SimulationPage() {
             setRsiType(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
@@ -847,6 +885,7 @@ function SimulationPage() {
             setRsiPeriod(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
@@ -855,6 +894,7 @@ function SimulationPage() {
             setRsiThreshold(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
@@ -863,6 +903,7 @@ function SimulationPage() {
             setSeed(
               value,
             )
+            setMonteCarlo(null)
             setSimulation(null)
           }
         }
