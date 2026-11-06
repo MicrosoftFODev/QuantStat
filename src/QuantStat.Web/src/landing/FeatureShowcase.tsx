@@ -1,3 +1,4 @@
+import DictionaryVisual from './DictionaryVisual'
 import ForecastVisual from './ForecastVisual'
 import MonteCarloVisual from './MonteCarloVisual'
 import StatisticsVisual from './StatisticsVisual'
@@ -128,19 +129,8 @@ function FeatureShowcase() {
             and formulas behind them.
           </p>
 
-          <div className="formula-cloud">
-            <span>&sigma;</span>
-            <span>&rho;</span>
-            <span>&mu;</span>
-            <span>CI</span>
-            <span>RSI</span>
-          </div>
+          <DictionaryVisual />
 
-          <div className="feature-tags">
-            <span>Concepts</span>
-            <span>Formulas</span>
-            <span>Examples</span>
-          </div>
         </article>
 
         <article className="feature-card feature-forecast">

@@ -11953,3 +11953,733 @@ strong.negative {
   }
 }
 
+
+/* ============================================================
+   QuantStat - CAPM / GARCH Model Preview
+   ============================================================ */
+
+.forecast-model-visual {
+  position: relative;
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.55),
+      rgba(2, 6, 23, 0.75)
+    );
+}
+
+
+/* Header */
+
+.forecast-model-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom:
+    1px solid rgba(51, 65, 85, 0.45);
+}
+
+.forecast-model-header > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.forecast-model-header span {
+  color: #475569;
+  font-size: 0.48rem;
+  letter-spacing: 0.1em;
+}
+
+.forecast-model-header strong {
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.forecast-model-badge {
+  padding: 5px 8px;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  border-radius: 999px;
+  color: #a5b4fc;
+  background: rgba(79, 70, 229, 0.08);
+  font-size: 0.48rem;
+  letter-spacing: 0.09em;
+}
+
+
+/* ============================================================
+   CAPM
+   ============================================================ */
+
+.capm-preview {
+  position: relative;
+  height: 265px;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      rgba(56, 189, 248, 0.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.03) 1px,
+      transparent 1px
+    );
+  background-size:
+    100% 52px,
+    70px 100%;
+  animation:
+    model-preview-arrival
+    320ms ease-out;
+}
+
+.capm-preview svg {
+  position: absolute;
+  inset: 10px 15px 30px 34px;
+  width: calc(100% - 49px);
+  height: calc(100% - 40px);
+}
+
+.capm-axis-x,
+.capm-axis-y {
+  stroke: rgba(100, 116, 139, 0.48);
+  stroke-width: 1;
+}
+
+.capm-sml {
+  stroke: #38bdf8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  filter:
+    drop-shadow(
+      0 0 4px
+      rgba(56, 189, 248, 0.25)
+    );
+  animation:
+    capm-line-reveal
+    1.15s
+    ease-out
+    forwards;
+}
+
+.capm-market-dot {
+  fill: #2dd4bf;
+}
+
+.capm-asset-dot {
+  fill: #818cf8;
+  filter:
+    drop-shadow(
+      0 0 6px
+      rgba(129, 140, 248, 0.8)
+    );
+}
+
+.capm-beta-guide {
+  stroke: rgba(129, 140, 248, 0.42);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.capm-y-label {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 8px;
+  color: #334155;
+  font-size: 0.43rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  transform:
+    translateY(-50%)
+    rotate(-90deg);
+}
+
+.capm-x-label {
+  position: absolute;
+  right: 18px;
+  bottom: 8px;
+  color: #334155;
+  font-size: 0.43rem;
+  letter-spacing: 0.08em;
+}
+
+.capm-risk-free,
+.capm-market-label,
+.capm-asset-label,
+.capm-beta-label {
+  position: absolute;
+  z-index: 5;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(2, 6, 23, 0.82);
+  font-size: 0.46rem;
+}
+
+.capm-risk-free {
+  left: 42px;
+  bottom: 53px;
+  color: #64748b;
+}
+
+.capm-market-label {
+  left: 50%;
+  top: 43%;
+  color: #5eead4;
+}
+
+.capm-asset-label {
+  left: 63%;
+  top: 31%;
+  color: #a5b4fc;
+}
+
+.capm-beta-label {
+  left: 61%;
+  bottom: 40px;
+  color: #818cf8;
+}
+
+
+/* ============================================================
+   GARCH
+   ============================================================ */
+
+.garch-preview {
+  position: relative;
+  height: 265px;
+  overflow: hidden;
+  background-image:
+    linear-gradient(
+      rgba(56, 189, 248, 0.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.03) 1px,
+      transparent 1px
+    );
+  background-size:
+    100% 52px,
+    70px 100%;
+  animation:
+    model-preview-arrival
+    320ms ease-out;
+}
+
+.garch-preview svg {
+  position: absolute;
+  inset: 12px 18px 30px 38px;
+  width: calc(100% - 56px);
+  height: calc(100% - 42px);
+}
+
+.garch-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1100;
+  stroke-dashoffset: 1100;
+  animation:
+    garch-line-reveal
+    1.3s ease-out forwards;
+}
+
+.garch-area {
+  opacity: 0;
+  animation:
+    garch-area-arrival
+    650ms
+    ease-out
+    350ms
+    forwards;
+}
+
+.garch-y-label {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  color: #334155;
+  font-size: 0.43rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  transform:
+    translateY(-50%)
+    rotate(-90deg);
+}
+
+.garch-x-label {
+  position: absolute;
+  right: 18px;
+  bottom: 8px;
+  color: #334155;
+  font-size: 0.43rem;
+  letter-spacing: 0.09em;
+}
+
+.garch-low,
+.garch-high {
+  position: absolute;
+  z-index: 5;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(2, 6, 23, 0.82);
+  font-size: 0.45rem;
+  letter-spacing: 0.05em;
+}
+
+.garch-low {
+  left: 18%;
+  bottom: 46px;
+  color: #5eead4;
+}
+
+.garch-high {
+  right: 17%;
+  top: 27px;
+  color: #a5b4fc;
+}
+
+
+/* ============================================================
+   Model selector
+   ============================================================ */
+
+.forecast-model-footer {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 13px;
+  border-top:
+    1px solid rgba(51, 65, 85, 0.45);
+}
+
+.forecast-model-footer span {
+  padding: 4px 8px;
+  border:
+    1px solid rgba(51, 65, 85, 0.65);
+  border-radius: 999px;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.58);
+  font-size: 0.5rem;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.forecast-model-footer span.active {
+  color: #7dd3fc;
+  border-color:
+    rgba(56, 189, 248, 0.32);
+  background:
+    rgba(14, 165, 233, 0.08);
+}
+
+.forecast-model-footer small {
+  margin-left: auto;
+  color: #334155;
+  font-size: 0.46rem;
+}
+
+
+/* ============================================================
+   One-time animations
+   ============================================================ */
+
+@keyframes model-preview-arrival {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes capm-line-reveal {
+  from {
+    stroke-dashoffset: 800;
+    opacity: 0.3;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes garch-line-reveal {
+  from {
+    stroke-dashoffset: 1100;
+    opacity: 0.3;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes garch-area-arrival {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .capm-preview,
+  .garch-preview {
+    height: 215px;
+  }
+
+  .capm-market-label,
+  .capm-asset-label {
+    font-size: 0.4rem;
+  }
+
+  .forecast-model-footer small {
+    display: none;
+  }
+}
+
+
+/* Accessibility */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .capm-preview,
+  .garch-preview,
+  .capm-sml,
+  .garch-path,
+  .garch-area {
+    animation: none !important;
+  }
+
+  .capm-sml,
+  .garch-path {
+    stroke-dashoffset: 0;
+  }
+
+  .garch-area {
+    opacity: 1;
+  }
+}
+
+
+/* ============================================================
+   QuantStat - Dictionary Showcase
+   ============================================================ */
+
+.dictionary-visual {
+  position: relative;
+  margin-top: 20px;
+  overflow: hidden;
+
+  border:
+    1px solid rgba(51, 65, 85, 0.65);
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      150deg,
+      rgba(15, 23, 42, 0.60),
+      rgba(2, 6, 23, 0.76)
+    );
+}
+
+.dictionary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 12px 15px;
+
+  border-bottom:
+    1px solid rgba(51, 65, 85, 0.45);
+}
+
+.dictionary-header span {
+  color: #475569;
+
+  font-size: 0.48rem;
+  letter-spacing: 0.10em;
+}
+
+.dictionary-header strong {
+  color: #64748b;
+
+  font-size: 0.56rem;
+  font-weight: 500;
+}
+
+
+/* Main concept */
+
+.dictionary-concept {
+  display: grid;
+
+  grid-template-columns:
+    135px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  min-height: 235px;
+
+  padding: 25px;
+
+  background-image:
+    linear-gradient(
+      rgba(56, 189, 248, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size:
+    60px 60px;
+
+  animation:
+    dictionary-arrival
+    320ms
+    ease-out;
+}
+
+.dictionary-symbol {
+  display: grid;
+  place-items: center;
+
+  width: 105px;
+  height: 105px;
+
+  border:
+    1px solid rgba(56, 189, 248, 0.24);
+
+  border-radius: 24px;
+
+  color: #7dd3fc;
+
+  background:
+    radial-gradient(
+      circle at 35% 25%,
+      rgba(56, 189, 248, 0.14),
+      rgba(15, 23, 42, 0.76)
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    0 15px 35px rgba(0, 0, 0, 0.16);
+
+  font-size: 2.1rem;
+  font-weight: 600;
+
+  letter-spacing: -0.04em;
+}
+
+
+/* Text */
+
+.dictionary-copy {
+  min-width: 0;
+}
+
+.dictionary-copy > span {
+  color: #818cf8;
+
+  font-size: 0.50rem;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.dictionary-copy h4 {
+  margin:
+    7px
+    0
+    12px;
+
+  color: #e2e8f0;
+
+  font-size: 1.25rem;
+  font-weight: 580;
+
+  letter-spacing: -0.025em;
+}
+
+.dictionary-copy code {
+  display: inline-block;
+
+  max-width: 100%;
+
+  padding:
+    7px
+    10px;
+
+  overflow-x: auto;
+
+  border:
+    1px solid rgba(51, 65, 85, 0.75);
+
+  border-radius: 7px;
+
+  color: #5eead4;
+
+  background:
+    rgba(2, 6, 23, 0.72);
+
+  font-family:
+    "Cascadia Code",
+    "Consolas",
+    monospace;
+
+  font-size: 0.72rem;
+
+  white-space: nowrap;
+}
+
+.dictionary-copy p {
+  max-width: 440px;
+
+  margin:
+    13px
+    0
+    0;
+
+  color: #64748b;
+
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+
+/* Concept selector */
+
+.dictionary-selector {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, 1fr);
+
+  border-top:
+    1px solid rgba(51, 65, 85, 0.45);
+}
+
+.dictionary-selector span {
+  display: grid;
+  place-items: center;
+
+  min-height: 42px;
+
+  border-right:
+    1px solid rgba(51, 65, 85, 0.38);
+
+  color: #475569;
+
+  background:
+    rgba(8, 13, 25, 0.44);
+
+  font-size: 0.66rem;
+  font-weight: 600;
+
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+}
+
+.dictionary-selector span:last-child {
+  border-right: 0;
+}
+
+.dictionary-selector span.active {
+  color: #7dd3fc;
+
+  background:
+    rgba(14, 165, 233, 0.08);
+
+  box-shadow:
+    inset 0 -2px #38bdf8;
+}
+
+
+/* Lightweight switch animation */
+
+@keyframes dictionary-arrival {
+
+  from {
+    opacity: 0.35;
+
+    transform:
+      translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+  .dictionary-header strong {
+    display: none;
+  }
+
+  .dictionary-concept {
+    grid-template-columns: 1fr;
+
+    gap: 20px;
+
+    min-height: 300px;
+
+    padding: 22px;
+  }
+
+  .dictionary-symbol {
+    width: 82px;
+    height: 82px;
+
+    font-size: 1.65rem;
+  }
+}
+
+
+/* Accessibility */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+
+  .dictionary-concept {
+    animation: none;
+  }
+}
+
