@@ -34,7 +34,6 @@ function formatCurrency(
 }
 
 
-
 function formatSignedPercent(
   value: number,
 ): string {
@@ -57,22 +56,11 @@ function StrategyComparison({
         right,
       ) => {
         if (
-          right.wins !==
-          left.wins
+          right.wins !== left.wins
         ) {
           return (
             right.wins -
             left.wins
-          )
-        }
-
-        if (
-          right.winRatePercent !==
-          left.winRatePercent
-        ) {
-          return (
-            right.winRatePercent -
-            left.winRatePercent
           )
         }
 
@@ -87,16 +75,6 @@ function StrategyComparison({
     rankedSummaries[0] ??
     null
 
-  const second =
-    rankedSummaries[1] ??
-    null
-
-  const winDifference =
-    winner && second
-      ? winner.wins -
-        second.wins
-      : 0
-
   return (
     <section className="strategy-panel">
       <div className="strategy-panel-header">
@@ -110,17 +88,17 @@ function StrategyComparison({
           </h2>
 
           <p>
-            Final values summarize all{' '}
+            Summary across{' '}
             {runCount.toLocaleString()}
             {' '}
-            completed historical simulations.
+            completed runs.
           </p>
         </div>
 
         {winner && (
           <div className="strategy-best">
             <span>
-              Most frequent winner
+              Overall winner
             </span>
 
             <strong>
@@ -129,51 +107,12 @@ function StrategyComparison({
 
             <small>
               {winner.wins.toLocaleString()}
-              {' '}
-              outright wins
-              {' Â· '}
-              {
-                winner
-                  .winRatePercent
-                  .toFixed(1)
-              }
-              %
+              {' / '}
+              {runCount.toLocaleString()}
+              {' wins'}
             </small>
-
-            <small>
-              95% Wilson CI
-              {' '}
-              {
-                winner
-                  .wilsonLowerPercent
-                  .toFixed(1)
-              }
-              %
-              {' â€“ '}
-              {
-                winner
-                  .wilsonUpperPercent
-                  .toFixed(1)
-              }
-              %
-            </small>
-
-            {second && (
-              <small>
-                {winDifference}
-                {' '}
-                more wins than second
-              </small>
-            )}
           </div>
         )}
-      </div>
-
-      <div className="strategy-comparison-note">
-        Winner is determined by the number
-        of runs in which a strategy achieved
-        the highest terminal wealth without
-        sharing first place.
       </div>
 
       <div className="strategy-table-wrap">
@@ -188,17 +127,8 @@ function StrategyComparison({
                 Median wealth
               </th>
 
-
               <th>
                 Median return
-              </th>
-
-              <th>
-                Mean return
-              </th>
-
-              <th>
-                5thâ€“95th return
               </th>
 
               <th>
@@ -210,7 +140,7 @@ function StrategyComparison({
               </th>
 
               <th>
-                Outright wins
+                Wins
               </th>
             </tr>
           </thead>
@@ -221,7 +151,6 @@ function StrategyComparison({
                 const isWinner =
                   summary.strategyId ===
                   winner?.strategyId
-
 
                 return (
                   <tr
@@ -261,15 +190,7 @@ function StrategyComparison({
                               summary.wins
                                 .toLocaleString()
                             }
-                            {' '}
-                            wins
-                            {' Â· '}
-                            {
-                              summary
-                                .winRatePercent
-                                .toFixed(1)
-                            }
-                            %
+                            {' outright wins'}
                           </small>
                         </div>
 
@@ -289,7 +210,6 @@ function StrategyComparison({
                       )}
                     </td>
 
-
                     <td
                       className={
                         summary
@@ -306,49 +226,7 @@ function StrategyComparison({
                       )}
                     </td>
 
-                    <td
-                      className={
-                        summary
-                          .returns
-                          .mean >= 0
-                          ? 'positive-value'
-                          : 'negative-value'
-                      }
-                    >
-                      {formatSignedPercent(
-                        summary
-                          .returns
-                          .mean,
-                      )}
-                    </td>
-
                     <td>
-                      {
-                        summary
-                          .returns
-                          .percentile05
-                          .toFixed(2)
-                      }
-                      %
-                      {' â€“ '}
-                      {
-                        summary
-                          .returns
-                          .percentile95
-                          .toFixed(2)
-                      }
-                      %
-                    </td>
-
-                    <td
-                      className={
-                        summary
-                          .lossProbabilityPercent >
-                        0
-                          ? 'negative-value'
-                          : undefined
-                      }
-                    >
                       {
                         summary
                           .lossProbabilityPercent
@@ -381,15 +259,12 @@ function StrategyComparison({
                         }
                       </strong>
 
-                      <br />
-
                       <small>
+                        {' / '}
                         {
-                          summary
-                            .winRatePercent
-                            .toFixed(1)
+                          runCount
+                            .toLocaleString()
                         }
-                        %
                       </small>
                     </td>
                   </tr>
