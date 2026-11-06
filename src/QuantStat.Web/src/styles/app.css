@@ -12839,3 +12839,214 @@ strong.negative {
   }
 }
 
+
+/* ============================================================
+   QuantStat - Compact authentication panel refinement
+   ============================================================ */
+
+.landing-auth-panel {
+  box-sizing: border-box;
+  width: 280px;
+  padding: 20px;
+}
+
+.landing-auth-panel .auth-provider-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+
+  width: 100%;
+  min-width: 0;
+}
+
+.landing-auth-panel .microsoft-sign-in-button,
+.landing-auth-panel .google-auth-control,
+.landing-auth-panel .google-sign-in-button,
+.landing-auth-panel .auth-divider,
+.landing-auth-panel .auth-error {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+
+/* Microsoft button */
+
+.landing-auth-panel .microsoft-sign-in-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  height: 42px;
+  min-height: 42px;
+
+  padding: 0 12px;
+
+  overflow: hidden;
+
+  border-radius: 7px;
+
+  font-size: 0.76rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.landing-auth-panel
+.microsoft-sign-in-button
+> span:last-child {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-auth-panel .microsoft-mark {
+  flex: 0 0 auto;
+}
+
+
+/* Google control */
+
+.landing-auth-panel .google-auth-control {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  gap: 7px;
+
+  overflow: hidden;
+}
+
+.landing-auth-panel .google-sign-in-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+
+  overflow: hidden;
+
+  border-radius: 7px;
+}
+
+
+/*
+ * Google Identity may inject an iframe into its container.
+ * Keep the rendered provider control inside the panel.
+ */
+
+.landing-auth-panel
+.google-sign-in-button
+iframe {
+  display: block;
+
+  width: 100% !important;
+  max-width: 100% !important;
+
+  margin: 0 auto;
+}
+
+.landing-auth-panel
+.google-sign-in-button
+> div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+
+/* Divider */
+
+.landing-auth-panel .auth-divider {
+  gap: 9px;
+
+  margin: 1px 0;
+
+  color: #475569;
+
+  font-size: 0.54rem;
+}
+
+.landing-auth-panel
+.auth-divider::before,
+.landing-auth-panel
+.auth-divider::after {
+  background:
+    rgba(71, 85, 105, 0.52);
+}
+
+
+/* Status and error messages */
+
+.landing-auth-panel .google-auth-status,
+.landing-auth-panel .auth-error {
+  overflow-wrap: anywhere;
+
+  font-size: 0.62rem;
+  line-height: 1.45;
+
+  text-align: center;
+}
+
+.landing-auth-panel .auth-privacy-note {
+  margin-top: 14px;
+
+  font-size: 0.57rem;
+  line-height: 1.45;
+}
+
+
+/* Desktop positioning */
+
+@media (min-width: 1051px) {
+
+  .landing-auth-panel {
+    right: 0;
+
+    width: 280px;
+  }
+
+  .landing-hero h1,
+  .landing-lead {
+    max-width:
+      calc(100% - 320px);
+  }
+}
+
+
+/* Mobile auth card */
+
+@media (max-width: 1050px) {
+
+  .landing-auth-panel {
+    width: min(
+      100%,
+      360px
+    );
+
+    padding: 22px;
+  }
+}
+
+
+@media (max-width: 420px) {
+
+  .landing-auth-panel {
+    width: 100%;
+
+    padding:
+      20px
+      16px;
+  }
+
+  .landing-auth-panel
+  .microsoft-sign-in-button {
+    font-size: 0.72rem;
+  }
+}
+
