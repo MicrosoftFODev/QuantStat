@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useRef,
   useState,
@@ -277,7 +277,7 @@ function GoogleSignInButton() {
                   'left',
 
                 width:
-                  300,
+                  260,
               },
             )
         }

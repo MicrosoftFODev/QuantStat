@@ -13050,3 +13050,120 @@ iframe {
   }
 }
 
+
+/* ============================================================
+   QuantStat - Matching provider buttons
+   ============================================================ */
+
+.landing-auth-panel {
+  width: 300px;
+  padding: 20px;
+}
+
+.landing-auth-panel .auth-provider-actions,
+.landing-auth-panel .google-auth-control {
+  width: 260px;
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.landing-auth-panel .microsoft-sign-in-button,
+.landing-auth-panel .google-sign-in-button,
+.landing-auth-panel .auth-divider,
+.landing-auth-panel .auth-error {
+  width: 260px;
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+
+/* Microsoft button styled to match Google's outline surface */
+
+.landing-auth-panel .microsoft-sign-in-button {
+  height: 42px;
+  min-height: 42px;
+
+  border: 1px solid #747775;
+  border-radius: 4px;
+
+  background: #ffffff;
+  color: #1f1f1f;
+
+  box-shadow: none;
+
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.landing-auth-panel
+.microsoft-sign-in-button:hover:not(:disabled) {
+  background: #f8f9fa;
+
+  box-shadow:
+    0 1px 3px
+    rgba(60, 64, 67, 0.20);
+}
+
+
+/* Google-rendered container */
+
+.landing-auth-panel .google-sign-in-button {
+  display: block;
+
+  height: 42px;
+  min-height: 42px;
+
+  overflow: hidden;
+
+  border-radius: 4px;
+}
+
+.landing-auth-panel
+.google-sign-in-button
+> div,
+.landing-auth-panel
+.google-sign-in-button
+iframe {
+  width: 260px !important;
+  max-width: 100% !important;
+  min-height: 42px !important;
+
+  margin: 0 auto;
+}
+
+
+/* Divider exactly matches provider width */
+
+.landing-auth-panel .auth-divider {
+  width: 260px;
+}
+
+
+/* Mobile */
+
+@media (max-width: 420px) {
+  .landing-auth-panel {
+    width: 100%;
+  }
+
+  .landing-auth-panel .auth-provider-actions,
+  .landing-auth-panel .google-auth-control,
+  .landing-auth-panel .microsoft-sign-in-button,
+  .landing-auth-panel .google-sign-in-button,
+  .landing-auth-panel .auth-divider,
+  .landing-auth-panel .auth-error {
+    width: 100%;
+  }
+
+  .landing-auth-panel
+  .google-sign-in-button
+  > div,
+  .landing-auth-panel
+  .google-sign-in-button
+  iframe {
+    width: 100% !important;
+  }
+}
+
