@@ -1122,7 +1122,7 @@ const [
           </p>
 
           <small>
-            Alpaca ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {
+            Alpaca &middot; {
               assetClassLabel(
                 assetClass,
               )
@@ -1892,7 +1892,7 @@ const [
                     ?.wilderRsi
                     ?.toFixed(2)
                   ??
-                  'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â'
+                  '-'
                 }
               </div>
 
@@ -1994,7 +1994,6 @@ const [
 
 
 export default MarketsPage
-
 
 
 
