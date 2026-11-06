@@ -742,7 +742,7 @@ function SimulationPage() {
               monteCarlo && (
                 <>
                   {' '}
-                  Ãƒâ€šÃ‚Â· {
+                  · {
                     monteCarlo
                       .runs.length
                       .toLocaleString()
