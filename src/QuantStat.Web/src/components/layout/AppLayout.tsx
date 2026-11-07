@@ -1,4 +1,4 @@
-﻿import {
+import {
   Activity,
   BarChart3,
   BookOpen,
@@ -25,6 +25,10 @@ import {
 import {
   usePreferences,
 } from '../../preferences/PreferencesContext'
+
+import {
+  useQuantStatAuth,
+} from '../../auth/AuthContext'
 
 
 const navigation = [
@@ -73,6 +77,12 @@ function AppLayout() {
   } =
     useMsal()
 
+  const {
+    googleUser,
+    signOutGoogle,
+  } =
+    useQuantStatAuth()
+
   const account =
     useAccount(
       accounts[0] ?? null,
@@ -98,6 +108,12 @@ function AppLayout() {
 
   const signOut =
     async (): Promise<void> => {
+      if (googleUser) {
+        signOutGoogle()
+        await instance.clearCache()
+        return
+      }
+
       await instance.logoutRedirect({
         account:
           account ?? undefined,

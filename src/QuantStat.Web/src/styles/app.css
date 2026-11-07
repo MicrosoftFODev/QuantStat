@@ -13828,3 +13828,85 @@ iframe {
   }
 }
 
+
+/* ============================================================
+   Non-personalized provider button sizing
+   ============================================================ */
+
+.landing-auth-panel .microsoft-sign-in-button,
+.landing-auth-panel .google-sign-in-button {
+  height: 36px;
+  min-height: 36px;
+}
+
+.landing-auth-panel
+.google-sign-in-button
+> div,
+.landing-auth-panel
+.google-sign-in-button
+iframe {
+  min-height: 36px !important;
+}
+
+.landing-auth-panel .microsoft-sign-in-button {
+  font-size: 0.78rem;
+}
+
+/* ============================================================
+   Google authentication button - safe sizing
+   ============================================================ */
+
+.landing-auth-panel .google-sign-in-button {
+  display: block;
+
+  width: 260px;
+  max-width: 100%;
+
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+
+  margin: 0 auto;
+  padding: 0;
+
+  overflow: hidden;
+
+  border-radius: 4px;
+  background: transparent;
+}
+
+.landing-auth-panel
+.google-sign-in-button
+> div,
+.landing-auth-panel
+.google-sign-in-button
+iframe {
+  display: block !important;
+
+  width: 260px !important;
+  max-width: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+}
+
+.landing-auth-panel .microsoft-sign-in-button {
+  height: 42px;
+  min-height: 42px;
+}
+
+@media (max-width: 420px) {
+
+  .landing-auth-panel .google-sign-in-button,
+  .landing-auth-panel
+  .google-sign-in-button
+  > div,
+  .landing-auth-panel
+  .google-sign-in-button
+  iframe {
+    width: 100% !important;
+  }
+}
+
