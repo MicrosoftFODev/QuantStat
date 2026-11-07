@@ -1,3 +1,4 @@
+import AboutQuantStat from './AboutQuantStat'
 import DictionaryVisual from './DictionaryVisual'
 import ForecastVisual from './ForecastVisual'
 import MonteCarloVisual from './MonteCarloVisual'
@@ -177,6 +178,8 @@ function FeatureShowcase() {
 
         </article>
       </div>
+
+      <AboutQuantStat />
 
       <div className="research-principle">
         <span>
