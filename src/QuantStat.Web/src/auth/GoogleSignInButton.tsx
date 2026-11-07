@@ -262,7 +262,7 @@ function GoogleSignInButton() {
                   'standard',
 
                 theme:
-                  'outline',
+                  'filled_black',
 
                 size:
                   'large',
@@ -271,7 +271,7 @@ function GoogleSignInButton() {
                   'continue_with',
 
                 shape:
-                  'rectangular',
+                  'pill',
 
                 logo_alignment:
                   'left',
